@@ -34,8 +34,8 @@ object FFXIVCraftingHQ extends App {
     def apply(action: Action) = copy(
       durability - action.durabilityCost,
       cp - action.cpCost,
-      quality + action.qualityIncrease,
-      progress - action.progressIncrease
+      quality + action.qualityIncrease * action.successRate,
+      progress - action.progressIncrease * action.successRate
     )
   }
 
