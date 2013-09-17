@@ -58,8 +58,26 @@ object FFXIVCraftingHQ extends App {
     finalState.quality - (durabilityViolations + cpViolations) * penalty - finalDurabilityPenalty
   }
 
+  val fitnessHistory = 100
+  var recentFitnessValues: List[Double] = Nil
+
+  def fitnessHistoryTest(specimens: List[Seq[Action]]): Boolean = {
+    val (best, fitness) = specimens.zip(specimens.map(fitnessFunc)).maxBy(_._2)
+    recentFitnessValues = (fitness :: recentFitnessValues).take(fitnessHistory)
+    recentFitnessValues.count(_ == fitness) == fitnessHistory
+  }
+
+  val fitnessThreshold = 0.5
+  def fitnessPercentageTest(specimens: List[Seq[Action]]): Boolean = {
+    val fitnessValues = specimens.map(fitnessFunc)
+    val best = fitnessValues.max
+    fitnessValues.count(_ == best) / specimens.size.toDouble > fitnessThreshold
+  }
+
+  def timeLimitTest = System.currentTimeMillis() - start > 60000
+
   def stopCondition(specimens: List[Seq[Action]]): Boolean = {
-    System.currentTimeMillis() - start > 60000
+    timeLimitTest || fitnessPercentageTest(specimens)
   }
 
   val genePool = actions.toArray
