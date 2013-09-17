@@ -39,29 +39,39 @@ class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
     Replace least-fit population with new individuals
   */
 
-  type MatePool = List[(Specimen, Double)]
-
-  def matePool(pool: Pool): MatePool = {
-    val fitnesses = pool.map(fitnessF).toArray
-    pool.zip(renormalize(fitnesses))
-  }
-
-  def renormalize(vector: Array[Double]): Array[Double] = {
-    val sum = vector.sum
-    vector.map(_ / sum)
-  }
-
   def popReproduction(pool: Pool): Pool = {
-    val mp = matePool(pool)
-    (1 to population).par.map(_ =>
-      crossover(monteCarlo(mp), monteCarlo(mp))).toList
+    val fitnessPool = evalFitness(pool)
+    val best = selectBest(fitnessPool)
+    val parents = best.zip(Random.shuffle(best))
+    val children = breed(parents)
+    val specimenSize = pool.head.size // TODO: Select new specimen size differently?
+    val randomNewSpecimens = (1 to (population - children.size)).map { _ => newSpecimen(specimenSize) }.toList
+    children ::: randomNewSpecimens
   }
 
-  def monteCarlo[A](weightedList: List[(A, Double)]): A =
-    weightedList(Random.nextInt(weightedList.length)) match {
-      case (s, f) if f > Random.nextFloat => s
-      case _ => monteCarlo(weightedList)
+  type Fitness = (Specimen, Double)
+  type FitnessPool = List[Fitness]
+
+  def evalFitness(pool: Pool): FitnessPool = pool.zip(normalize(pool.par.map(fitnessF).toList))
+
+  def normalize(values: List[Double]): List[Double] = {
+    val max = values.max
+    values.map(_ / max)
+  }
+
+  def selectBest(pool: FitnessPool): Pool = {
+    pool.filter {
+      case (s, f) => f > 0.5
+    } map {
+      case (s, f) => s
     }
+  }
+
+  def breed(parents: List[(Specimen, Specimen)]): Pool = {
+    parents.map {
+      case (a, b) => crossover(a, b)
+    }
+  }
 
   def crossover(a: Specimen, b: Specimen): Specimen =
     mutate(specimenBuilder(a.zip(b).map(gene =>
