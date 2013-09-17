@@ -21,8 +21,9 @@ class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
 
   @tailrec
   final def evolution(pool: Pool, epoch: Int = 0): (Pool, Int) = {
-    if (epoch % 10 == 0) {
-      println(s"Generation #$epoch")
+    if (epoch % 100 == 0) {
+      val usedMemory = sys.runtime.totalMemory() - sys.runtime.freeMemory()
+      println(s"Generation #$epoch - ${usedMemory/1024/1024}MB")
     }
     val newGeneration = popReproduction(pool)
     if (stopCondition(newGeneration)) (newGeneration, epoch)
