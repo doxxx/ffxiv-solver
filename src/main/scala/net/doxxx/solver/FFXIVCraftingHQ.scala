@@ -87,7 +87,7 @@ object FFXIVCraftingHQ extends App {
   }
 
   val genePool = actions.toArray
-  val petri = new GeneticExploration[Action, Vector[Action]](
+  val experiment = new Experiment[Action, Vector[Action]](
     mutationRate = 0.01,
     population = 500,
     genePool,
@@ -103,7 +103,7 @@ object FFXIVCraftingHQ extends App {
   println(s"archetype fitness = ${fitnessFunc(archetype)}")
 
   val start = System.currentTimeMillis()
-  val (evolvedSpecimens, epoch) = petri.evolution(petri.randomPool(archetype))
+  val (evolvedSpecimens, epoch) = experiment.evolution(experiment.randomPool(archetype))
   val elapsed = System.currentTimeMillis() - start
 
   println()

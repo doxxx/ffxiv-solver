@@ -3,12 +3,12 @@ package net.doxxx.solver
 import scala.util.Random
 import scala.annotation.tailrec
 
-class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
-(val mutationRate: Double,
- val population: Int,
- genePool: Array[Gene],
+class Experiment[Gene, Specimen <% Iterable[Gene]]
+(mutationRate: Double,
+ population: Int,
+ genePool: IndexedSeq[Gene],
  specimenBuilder: Iterable[Gene] => Specimen,
- fitnessF: Specimen => Double,
+ fitnessCalc: Specimen => Double,
  stopCondition: List[Specimen] => Boolean)
 {
   def randomGenes: Stream[Gene] = genePool(Random.nextInt(genePool.length)) #:: randomGenes
@@ -50,7 +50,7 @@ class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
   type Fitness = (Specimen, Double)
   type FitnessPool = List[Fitness]
 
-  def evalFitness(pool: Pool): FitnessPool = pool.zip(normalize(pool.par.map(fitnessF).toList))
+  def evalFitness(pool: Pool): FitnessPool = pool.zip(normalize(pool.par.map(fitnessCalc).toList))
 
   def normalize(values: Seq[Double]): Seq[Double] = {
     val min = values.min
