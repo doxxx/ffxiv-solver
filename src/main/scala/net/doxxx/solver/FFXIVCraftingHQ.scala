@@ -77,12 +77,12 @@ object FFXIVCraftingHQ extends App {
   def timeLimitTest = System.currentTimeMillis() - start > 60000
 
   def stopCondition(specimens: List[Vector[Action]]): Boolean = {
-    timeLimitTest || fitnessPercentageTest(specimens)
+    timeLimitTest || fitnessHistoryTest(specimens)
   }
 
   val genePool = actions.toArray
   val petri = new GeneticExploration[Action, Vector[Action]](
-    mutationRate = 0.1,
+    mutationRate = 0.01,
     population = 500,
     genePool,
     specimenBuilder,
