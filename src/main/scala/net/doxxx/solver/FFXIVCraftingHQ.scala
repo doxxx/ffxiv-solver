@@ -72,7 +72,7 @@ object FFXIVCraftingHQ extends App {
     recentFitnessValues.count(_ == bestFitness) == fitnessHistory
   }
 
-  val fitnessThreshold = 0.5
+  val fitnessThreshold = 0.9
   def fitnessPercentageTest(specimens: List[Vector[Action]]): Boolean = {
     val fitnessValues = specimens.map(fitnessFunc)
     val best = fitnessValues.max
@@ -82,7 +82,8 @@ object FFXIVCraftingHQ extends App {
   def timeLimitTest = System.currentTimeMillis() - start > 60000
 
   def stopCondition(specimens: List[Vector[Action]]): Boolean = {
-    timeLimitTest || fitnessHistoryTest(specimens)
+//    timeLimitTest || fitnessHistoryTest(specimens)
+    timeLimitTest || fitnessPercentageTest(specimens)
   }
 
   val genePool = actions.toArray
