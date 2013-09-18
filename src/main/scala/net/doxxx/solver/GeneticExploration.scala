@@ -17,7 +17,7 @@ class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
   type Pool = List[Specimen]
 
   def randomPool(archetype: Specimen): Pool =
-    archetype :: (1 until population).map(_ => newSpecimen(archetype.size)).toList
+    (1 until population).map(_ => newSpecimen(archetype.size)).toList
 
   @tailrec
   final def evolution(pool: Pool, epoch: Int = 0): (Pool, Int) = {
@@ -43,11 +43,8 @@ class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
   def popReproduction(pool: Pool): Pool = {
     val fitnessPool = evalFitness(pool)
     val best = selectBest(fitnessPool)
-    val parents = best.zip(Random.shuffle(best))
-    val children = breed(parents)
-    val specimenSize = pool.head.size // TODO: Select new specimen size differently?
-    val randomNewSpecimens = (1 to (population - children.size)).map { _ => newSpecimen(specimenSize) }.toList
-    children ::: randomNewSpecimens
+    val children = breed(best, population - best.size)
+    best ::: children
   }
 
   type Fitness = (Specimen, Double)
@@ -69,11 +66,14 @@ class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
     }.toList
   }
 
-  def breed(parents: List[(Specimen, Specimen)]): Pool = {
-    parents.map {
+  def breed(pool: Pool, count: Int): Pool = {
+    randomPairs(pool).take(count).map {
       case (a, b) => crossover(a, b)
-    }
+    }.toList
   }
+
+  def randomPairs(pool: Pool): Stream[(Specimen,Specimen)] =
+    (pool(Random.nextInt(pool.size)), pool(Random.nextInt(pool.size))) #:: randomPairs(pool)
 
   def crossover(a: Specimen, b: Specimen): Specimen =
     mutate(specimenBuilder(a.zip(b).map(gene =>
