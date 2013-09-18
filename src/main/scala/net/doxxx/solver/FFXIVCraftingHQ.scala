@@ -52,10 +52,15 @@ object FFXIVCraftingHQ extends App {
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
+    val progressViolations = intermediateStates.count(_.progress < 0)
     val cpViolations = states.count(_.cp < 0)
     val finalDurabilityPenalty = if (finalState.durability < 0) penalty else 0
+    val finalProgressPenalty = if (finalState.progress > 0) penalty else 0
 
-    finalState.quality - (durabilityViolations + cpViolations) * penalty - finalDurabilityPenalty
+    (finalState.quality
+      - (durabilityViolations + progressViolations + cpViolations) * penalty
+      - finalDurabilityPenalty
+      - finalProgressPenalty)
   }
 
   val fitnessHistory = 100
