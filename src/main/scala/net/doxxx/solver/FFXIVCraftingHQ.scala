@@ -103,7 +103,7 @@ object FFXIVCraftingHQ extends App {
   println()
 
   val best = evolvedSpecimens.maxBy(fitnessFunc)
-  val bestPretty = best.map(a => actions.indexOf(a)).mkString("[", ",", "]")
+  val bestPretty = best.filter(_ != NoAction).map(a => actions.indexOf(a)).mkString("[", ",", "]")
   println(s"$bestPretty => ${fitnessFunc(best)}")
   println(s"Generations: ${epoch+1}")
   println(s"Total time: ${elapsed/1000}s")
