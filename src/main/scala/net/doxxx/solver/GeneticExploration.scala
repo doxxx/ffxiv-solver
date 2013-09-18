@@ -55,17 +55,18 @@ class GeneticExploration[Gene, Specimen <% Iterable[Gene]]
 
   def evalFitness(pool: Pool): FitnessPool = pool.zip(normalize(pool.par.map(fitnessF).toList))
 
-  def normalize(values: List[Double]): List[Double] = {
+  def normalize(values: Seq[Double]): Seq[Double] = {
+    val min = values.min
     val max = values.max
-    values.map(_ / max)
+    values.map(v => (v - ((max + min) / 2)) / ((max - min) / 2))
   }
 
   def selectBest(pool: FitnessPool): Pool = {
-    pool.filter {
-      case (s, f) => f > 0.5
-    } map {
+    pool.par.filter {
+      case (s, f) => f > 0
+    }.map {
       case (s, f) => s
-    }
+    }.toList
   }
 
   def breed(parents: List[(Specimen, Specimen)]): Pool = {
