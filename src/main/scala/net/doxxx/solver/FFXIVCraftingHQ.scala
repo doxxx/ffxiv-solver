@@ -28,7 +28,7 @@ object FFXIVCraftingHQ extends App {
   val startQuality: Int = 0
   val startProgress: Int = 55
 
-  def specimenBuilder(actions: Iterable[Action]): Seq[Action] = actions.toSeq
+  def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
   case class State(durability: Int, cp: Int, quality: Double, progress: Double) {
     def apply(action: Action) = copy(
@@ -41,7 +41,7 @@ object FFXIVCraftingHQ extends App {
 
   val penalty = 10000
 
-  def fitnessFunc(steps: Seq[Action]): Double = {
+  def fitnessFunc(steps: Vector[Action]): Double = {
     @tailrec
     def eval(steps: List[Action], states: List[State]): List[State] = steps match {
       case Nil => states
@@ -61,14 +61,14 @@ object FFXIVCraftingHQ extends App {
   val fitnessHistory = 100
   var recentFitnessValues: List[Double] = Nil
 
-  def fitnessHistoryTest(specimens: List[Seq[Action]]): Boolean = {
+  def fitnessHistoryTest(specimens: List[Vector[Action]]): Boolean = {
     val (best, fitness) = specimens.zip(specimens.map(fitnessFunc)).maxBy(_._2)
     recentFitnessValues = (fitness :: recentFitnessValues).take(fitnessHistory)
     recentFitnessValues.count(_ == fitness) == fitnessHistory
   }
 
   val fitnessThreshold = 0.5
-  def fitnessPercentageTest(specimens: List[Seq[Action]]): Boolean = {
+  def fitnessPercentageTest(specimens: List[Vector[Action]]): Boolean = {
     val fitnessValues = specimens.map(fitnessFunc)
     val best = fitnessValues.max
     fitnessValues.count(_ == best) / specimens.size.toDouble > fitnessThreshold
@@ -76,12 +76,12 @@ object FFXIVCraftingHQ extends App {
 
   def timeLimitTest = System.currentTimeMillis() - start > 60000
 
-  def stopCondition(specimens: List[Seq[Action]]): Boolean = {
+  def stopCondition(specimens: List[Vector[Action]]): Boolean = {
     timeLimitTest || fitnessPercentageTest(specimens)
   }
 
   val genePool = actions.toArray
-  val petri = new GeneticExploration[Action, Seq[Action]](
+  val petri = new GeneticExploration[Action, Vector[Action]](
     mutationRate = 0.1,
     population = 500,
     genePool,
@@ -90,8 +90,9 @@ object FFXIVCraftingHQ extends App {
     stopCondition
   )
 
-//  val archetype = Seq(4, 1, 0, 6, 0, 1, 3, 6, 0, 5, 2, 2, 6, 2, 1).map(actions)
-  val archetype = Seq(0, 1, 0, 0, 0, 1, 3, 0, 0, 0, 2, 2, 0, 2, 1).map(actions)
+  // Original best sequence from Excel:
+  // 4, 1, 0, 6, 0, 1, 3, 6, 0, 5, 2, 2, 6, 2, 1
+  val archetype = Vector(0, 1, 0, 0, 0, 1, 3, 0, 0, 0, 2, 2, 0, 2, 1).map(actions)
 
   println(s"archetype fitness = ${fitnessFunc(archetype)}")
 
