@@ -62,9 +62,9 @@ object FFXIVCraftingHQ extends App {
   var recentFitnessValues: List[Double] = Nil
 
   def fitnessHistoryTest(specimens: List[Vector[Action]]): Boolean = {
-    val (best, fitness) = specimens.zip(specimens.map(fitnessFunc)).maxBy(_._2)
-    recentFitnessValues = (fitness :: recentFitnessValues).take(fitnessHistory)
-    recentFitnessValues.count(_ == fitness) == fitnessHistory
+    val bestFitness = specimens.map(fitnessFunc).max
+    recentFitnessValues = (bestFitness :: recentFitnessValues).take(fitnessHistory)
+    recentFitnessValues.count(_ == bestFitness) == fitnessHistory
   }
 
   val fitnessThreshold = 0.5
