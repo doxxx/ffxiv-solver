@@ -18,7 +18,7 @@ object FFXIVCraftingHQ extends App {
   val MastersMend = Action("MM", -30, 94, 1, 0, 0)
   val InnerQuiet = Action("IQ", 0, 18, 1, 0, 0)
   val SteadyHand = Action("SH", 0, 22, 1, 0, 0)
-  val HastyTouch = Action("HT", 10, 22, 0.5, 65, 0)
+  val HastyTouch = Action("HT", 10, 0, 0.5, 65, 0)
   val WasteNot = Action("WN", 0, 56, 1, 0, 0)
 
   val actions = IndexedSeq(
