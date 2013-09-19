@@ -2,6 +2,7 @@ package net.doxxx.solver
 
 import scala.util.Random
 import scala.annotation.tailrec
+import scala.concurrent.duration.TimeUnit
 
 class Experiment[Gene, Specimen <% Iterable[Gene]]
 (mutationRate: Double,
@@ -82,4 +83,34 @@ class Experiment[Gene, Specimen <% Iterable[Gene]]
   def mutate(s: Specimen): Specimen =
     specimenBuilder(s.map(gene =>
       if (mutationRate > Random.nextFloat) randomGenes.head else gene))
+}
+
+object Experiment {
+
+  private class FitnessHistory {
+    var values: List[Double] = Nil
+  }
+
+  def fitnessHistoryTest[Gene, Specimen <% Iterable[Gene]](fitnessHistory: Int, fitnessCalc: Specimen => Double) = {
+    val history = new FitnessHistory;
+    { (specimens: List[Specimen]) => Boolean
+      val bestFitness = specimens.map(fitnessCalc).max
+      history.values = (bestFitness :: history.values).take(fitnessHistory)
+      history.values.count(_ == bestFitness) == fitnessHistory
+    }
+  }
+
+  def fitnessPercentageTest[Gene, Specimen <% Iterable[Gene]](fitnessThreshold: Double, fitnessCalc: Specimen => Double) = {
+    { (specimens: List[Specimen]) => Boolean
+      val fitnessValues = specimens.map(fitnessCalc)
+      val best = fitnessValues.max
+      fitnessValues.count(_ == best) / specimens.size.toDouble > fitnessThreshold
+    }
+  }
+
+  def timeLimitTest(limit: Long, unit: TimeUnit, start: Long = System.currentTimeMillis()): () => Boolean =
+  { () =>
+    System.currentTimeMillis() - start > unit.toMillis(limit)
+  }
+
 }

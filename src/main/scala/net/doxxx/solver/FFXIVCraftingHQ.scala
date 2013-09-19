@@ -1,6 +1,7 @@
 package net.doxxx.solver
 
 import scala.annotation.tailrec
+import scala.concurrent.duration._
 
 object FFXIVCraftingHQ extends App {
 
@@ -63,27 +64,10 @@ object FFXIVCraftingHQ extends App {
       - finalProgressPenalty)
   }
 
-  val fitnessHistory = 100
-  var recentFitnessValues: List[Double] = Nil
-
-  def fitnessHistoryTest(specimens: List[Vector[Action]]): Boolean = {
-    val bestFitness = specimens.map(fitnessFunc).max
-    recentFitnessValues = (bestFitness :: recentFitnessValues).take(fitnessHistory)
-    recentFitnessValues.count(_ == bestFitness) == fitnessHistory
-  }
-
-  val fitnessThreshold = 0.9
-  def fitnessPercentageTest(specimens: List[Vector[Action]]): Boolean = {
-    val fitnessValues = specimens.map(fitnessFunc)
-    val best = fitnessValues.max
-    fitnessValues.count(_ == best) / specimens.size.toDouble > fitnessThreshold
-  }
-
-  def timeLimitTest = System.currentTimeMillis() - start > 60000
-
+  val timeLimitTest = Experiment.timeLimitTest(60, SECONDS)
+  val fitnessTest = Experiment.fitnessPercentageTest(0.9, fitnessFunc)
   def stopCondition(specimens: List[Vector[Action]]): Boolean = {
-//    timeLimitTest || fitnessHistoryTest(specimens)
-    timeLimitTest || fitnessPercentageTest(specimens)
+    timeLimitTest() || fitnessTest(specimens)
   }
 
   val genePool = actions.toArray
