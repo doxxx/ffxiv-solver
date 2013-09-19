@@ -4,7 +4,12 @@ import scala.annotation.tailrec
 import scala.concurrent.duration._
 import net.doxxx.solver.Experiment
 
-class FFXIVCraftingHQ {
+class FFXIVCraftingHQ(baseProgressIncrease: Int,
+                      baseQualityIncrease: Int,
+                      startDurability: Int,
+                      startCP: Int,
+                      startQuality: Int,
+                      difficulty: Int) {
 
   case class Action (name: String,
                      durabilityCost: Int,
@@ -14,22 +19,17 @@ class FFXIVCraftingHQ {
                      progressIncrease: Int)
 
   val NoAction = Action("NOP", 0, 0, 0, 0, 0)
-  val BasicSynth = Action("BS", 10, 0, 0.9, 0, 26)
-  val BasicTouch = Action("BT", 10, 18, 0.7, 65, 0)
+  val BasicSynth = Action("BS", 10, 0, 0.9, 0, baseProgressIncrease)
+  val BasicTouch = Action("BT", 10, 18, 0.7, baseQualityIncrease, 0)
   val MastersMend = Action("MM", -30, 94, 1, 0, 0)
   val InnerQuiet = Action("IQ", 0, 18, 1, 0, 0) // toggle, quality increases will increase control
   val SteadyHand = Action("SH", 0, 22, 1, 0, 0) // Improves action success rate by 20% for the next five steps
-  val HastyTouch = Action("HT", 10, 0, 0.5, 65, 0)
+  val HastyTouch = Action("HT", 10, 0, 0.5, baseQualityIncrease, 0)
   val WasteNot = Action("WN", 0, 56, 1, 0, 0) // Reduces loss of durability by 50% for the next four steps
 
   val actions = IndexedSeq(
     NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand
   )
-
-  val startDurability: Int = 60
-  val startCP: Int = 190
-  val startQuality: Int = 0
-  val startProgress: Int = 55
 
   def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
@@ -55,7 +55,7 @@ class FFXIVCraftingHQ {
       case action :: tail => eval(tail, states.head.apply(action) :: states)
     }
 
-    val initState = State(startDurability, startCP, startQuality, startProgress, 0)
+    val initState = State(startDurability, startCP, startQuality, difficulty, 0)
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
@@ -111,6 +111,13 @@ class FFXIVCraftingHQ {
 }
 
 object FFXIVCraftingHQ extends App {
-  val model = new FFXIVCraftingHQ
+  val model = new FFXIVCraftingHQ(
+    baseProgressIncrease = 26,
+    baseQualityIncrease = 65,
+    startDurability = 60,
+    startCP = 190,
+    startQuality = 0,
+    difficulty = 55
+  )
   model.run()
 }
