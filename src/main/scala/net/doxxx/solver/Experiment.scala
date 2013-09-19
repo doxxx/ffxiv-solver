@@ -18,7 +18,7 @@ class Experiment[Gene, Specimen <% Iterable[Gene]]
   type Pool = List[Specimen]
 
   def randomPool(archetype: Specimen): Pool =
-    (1 until population).map(_ => newSpecimen(archetype.size)).toList
+    archetype :: (1 until population).map(_ => newSpecimen(archetype.size)).toList
 
   @tailrec
   final def evolution(pool: Pool, epoch: Int = 0): (Pool, Int) = {
