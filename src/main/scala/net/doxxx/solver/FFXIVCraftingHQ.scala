@@ -5,20 +5,21 @@ import scala.concurrent.duration._
 
 object FFXIVCraftingHQ extends App {
 
-  case class Action (durabilityCost: Int,
+  case class Action (name: String,
+                     durabilityCost: Int,
                      cpCost: Int,
                      successRate: Double,
                      qualityIncrease: Int,
                      progressIncrease: Int)
 
-  val NoAction = Action(0, 0, 0, 0, 0)
-  val BasicSynth = Action(10, 0, 0.9, 0, 26)
-  val BasicTouch = Action(10, 18, 0.7, 65, 0)
-  val MastersMend = Action(-30, 94, 1, 0, 0)
-  val InnerQuiet = Action(0, 18, 1, 0, 0)
-  val SteadyHand = Action(0, 22, 1, 0, 0)
-  val HastyTouch = Action(10, 22, 0.5, 65, 0)
-  val WasteNot = Action(0, 56, 1, 0, 0)
+  val NoAction = Action("NOP", 0, 0, 0, 0, 0)
+  val BasicSynth = Action("BS", 10, 0, 0.9, 0, 26)
+  val BasicTouch = Action("BT", 10, 18, 0.7, 65, 0)
+  val MastersMend = Action("MM", -30, 94, 1, 0, 0)
+  val InnerQuiet = Action("IQ", 0, 18, 1, 0, 0)
+  val SteadyHand = Action("SH", 0, 22, 1, 0, 0)
+  val HastyTouch = Action("HT", 10, 22, 0.5, 65, 0)
+  val WasteNot = Action("WN", 0, 56, 1, 0, 0)
 
   val actions = IndexedSeq(
     NoAction, BasicSynth, BasicTouch, MastersMend //, InnerQuiet, SteadyHand, HastyTouch, WasteNot
@@ -93,7 +94,7 @@ object FFXIVCraftingHQ extends App {
   println()
 
   val best = evolvedSpecimens.maxBy(fitnessFunc)
-  val bestPretty = best.filter(_ != NoAction).map(a => actions.indexOf(a)).mkString("[", ",", "]")
+  val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", ", ", "]")
   println(s"$bestPretty => ${fitnessFunc(best)}")
   println(s"Generations: ${epoch+1}")
   println(s"Total time: ${elapsed/1000}s")
