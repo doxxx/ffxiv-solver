@@ -16,13 +16,13 @@ object FFXIVCraftingHQ extends App {
   val BasicSynth = Action("BS", 10, 0, 0.9, 0, 26)
   val BasicTouch = Action("BT", 10, 18, 0.7, 65, 0)
   val MastersMend = Action("MM", -30, 94, 1, 0, 0)
-  val InnerQuiet = Action("IQ", 0, 18, 1, 0, 0)
-  val SteadyHand = Action("SH", 0, 22, 1, 0, 0)
+  val InnerQuiet = Action("IQ", 0, 18, 1, 0, 0) // toggle, quality increases will increase control
+  val SteadyHand = Action("SH", 0, 22, 1, 0, 0) // Improves action success rate by 20% for the next five steps
   val HastyTouch = Action("HT", 10, 0, 0.5, 65, 0)
-  val WasteNot = Action("WN", 0, 56, 1, 0, 0)
+  val WasteNot = Action("WN", 0, 56, 1, 0, 0) // Reduces loss of durability by 50% for the next four steps
 
   val actions = IndexedSeq(
-    NoAction, BasicSynth, BasicTouch, MastersMend //, InnerQuiet, SteadyHand, HastyTouch, WasteNot
+    NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand
   )
 
   val startDurability: Int = 60
@@ -32,13 +32,17 @@ object FFXIVCraftingHQ extends App {
 
   def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
-  case class State(durability: Int, cp: Int, quality: Double, progress: Double) {
-    def apply(action: Action) = copy(
-      durability - action.durabilityCost,
-      cp - action.cpCost,
-      quality + action.qualityIncrease * action.successRate,
-      progress - action.progressIncrease * action.successRate
-    )
+  case class State(durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int) {
+    def apply(action: Action) = {
+      val successRate = math.min(1, action.successRate + (if (steadyHand > 0) 0.2 else 0))
+      copy(
+        durability - action.durabilityCost,
+        cp - action.cpCost,
+        quality + action.qualityIncrease * successRate,
+        progress - action.progressIncrease * successRate,
+        steadyHand = if (action == SteadyHand) 5 else math.max(0, steadyHand - 1)
+      )
+    }
   }
 
   val penalty = 10000
@@ -50,7 +54,7 @@ object FFXIVCraftingHQ extends App {
       case action :: tail => eval(tail, states.head.apply(action) :: states)
     }
 
-    val initState = State(startDurability, startCP, startQuality, startProgress)
+    val initState = State(startDurability, startCP, startQuality, startProgress, 0)
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
