@@ -1,9 +1,10 @@
-package net.doxxx.solver
+package net.doxxx.solver.models
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
+import net.doxxx.solver.Experiment
 
-object FFXIVCraftingHQ extends App {
+class FFXIVCraftingHQ {
 
   case class Action (name: String,
                      durabilityCost: Int,
@@ -71,36 +72,45 @@ object FFXIVCraftingHQ extends App {
 
   val timeLimitTest = Experiment.timeLimitTest(60, SECONDS)
   val fitnessTest = Experiment.fitnessPercentageTest(0.9, fitnessFunc)
+
   def stopCondition(specimens: List[Vector[Action]]): Boolean = {
     timeLimitTest() || fitnessTest(specimens)
   }
 
   val genePool = actions.toArray
-  val experiment = new Experiment[Action, Vector[Action]](
-    mutationRate = 0.01,
-    population = 500,
-    genePool,
-    specimenBuilder,
-    fitnessFunc,
-    stopCondition
-  )
 
-  // Original best sequence from Excel:
-  // 4, 1, 0, 6, 0, 1, 3, 6, 0, 5, 2, 2, 6, 2, 1
-  val archetype = Vector(0, 1, 0, 0, 0, 1, 3, 0, 0, 0, 2, 2, 0, 2, 1).map(actions)
+  def run() {
+    val experiment = new Experiment[Action, Vector[Action]](
+      mutationRate = 0.01,
+      population = 500,
+      genePool,
+      specimenBuilder,
+      fitnessFunc,
+      stopCondition
+    )
 
-  println(s"archetype fitness = ${fitnessFunc(archetype)}")
+    // Original best sequence from Excel:
+    // 4, 1, 0, 6, 0, 1, 3, 6, 0, 5, 2, 2, 6, 2, 1
+    val archetype = Vector(0, 1, 0, 0, 0, 1, 3, 0, 0, 0, 2, 2, 0, 2, 1).map(actions)
 
-  val start = System.currentTimeMillis()
-  val (evolvedSpecimens, epoch) = experiment.evolution(experiment.randomPool(archetype))
-  val elapsed = System.currentTimeMillis() - start
+    println(s"archetype fitness = ${fitnessFunc(archetype)}")
 
-  println()
+    val start = System.currentTimeMillis()
+    val (evolvedSpecimens, epoch) = experiment.evolution(experiment.randomPool(archetype))
+    val elapsed = System.currentTimeMillis() - start
 
-  val best = evolvedSpecimens.maxBy(fitnessFunc)
-  val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", ", ", "]")
-  println(s"$bestPretty => ${fitnessFunc(best)}")
-  println(s"Generations: ${epoch+1}")
-  println(s"Total time: ${elapsed/1000}s")
-  println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
+    println()
+
+    val best = evolvedSpecimens.maxBy(fitnessFunc)
+    val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", ", ", "]")
+    println(s"$bestPretty => ${fitnessFunc(best)}")
+    println(s"Generations: ${epoch+1}")
+    println(s"Total time: ${elapsed/1000}s")
+    println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
+  }
+}
+
+object FFXIVCraftingHQ extends App {
+  val model = new FFXIVCraftingHQ
+  model.run()
 }
