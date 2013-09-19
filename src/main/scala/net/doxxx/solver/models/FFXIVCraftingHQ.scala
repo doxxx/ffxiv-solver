@@ -9,7 +9,8 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
                       startDurability: Int,
                       startCP: Int,
                       startQuality: Int,
-                      difficulty: Int) {
+                      difficulty: Int,
+                      archetype: Vector[String]) {
 
   case class Action (name: String,
                      durabilityCost: Int,
@@ -30,6 +31,7 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
   val actions = IndexedSeq(
     NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand
   )
+  val actionMap: Map[String,Action] = actions.map(a => a.name -> a).toMap
 
   def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
@@ -89,20 +91,17 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
       stopCondition
     )
 
-    // Original best sequence from Excel:
-    // 4, 1, 0, 6, 0, 1, 3, 6, 0, 5, 2, 2, 6, 2, 1
-    val archetype = Vector(0, 1, 0, 0, 0, 1, 3, 0, 0, 0, 2, 2, 0, 2, 1).map(actions)
-
-    println(s"archetype fitness = ${fitnessFunc(archetype)}")
+    val archetypeGenes = archetype.map(actionMap)
+    println(s"archetype fitness = ${fitnessFunc(archetypeGenes)}")
 
     val start = System.currentTimeMillis()
-    val (evolvedSpecimens, epoch) = experiment.evolution(experiment.randomPool(archetype))
+    val (evolvedSpecimens, epoch) = experiment.evolution(experiment.randomPool(archetypeGenes))
     val elapsed = System.currentTimeMillis() - start
 
     println()
 
     val best = evolvedSpecimens.maxBy(fitnessFunc)
-    val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", ", ", "]")
+    val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", " ", "]")
     println(s"$bestPretty => ${fitnessFunc(best)}")
     println(s"Generations: ${epoch+1}")
     println(s"Total time: ${elapsed/1000}s")
@@ -111,13 +110,17 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
 }
 
 object FFXIVCraftingHQ extends App {
+  // Blank archetype: NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
+  // Best: ~234 <= BS SH BT BT BT BT MM BS BS
+  val archetype = "NOP NOP NOP NOP NOP NOP BS SH BT BT BT BT MM BS BS".split(' ').toVector
   val model = new FFXIVCraftingHQ(
     baseProgressIncrease = 26,
     baseQualityIncrease = 65,
     startDurability = 60,
     startCP = 190,
     startQuality = 0,
-    difficulty = 55
+    difficulty = 55,
+    archetype
   )
   model.run()
 }
