@@ -4,7 +4,9 @@ import scala.annotation.tailrec
 import scala.concurrent.duration._
 import net.doxxx.solver.Experiment
 
-class FFXIVCraftingHQ(baseProgressIncrease: Int,
+class FFXIVCraftingHQ(baseCraftsmanship: Int,
+                      baseControl: Int,
+                      baseProgressIncrease: Int,
                       baseQualityIncrease: Int,
                       startDurability: Int,
                       startCP: Int,
@@ -35,7 +37,8 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
 
   def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
-  case class State(durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int) {
+  case class State(durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int,
+                    craftsmanship: Double, control: Double) {
     def apply(action: Action) = {
       val successRate = math.min(1, action.successRate + (if (steadyHand > 0) 0.2 else 0))
       copy(
@@ -43,7 +46,9 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
         cp - action.cpCost,
         quality + action.qualityIncrease * successRate,
         progress - action.progressIncrease * successRate,
-        steadyHand = if (action == SteadyHand) 5 else math.max(0, steadyHand - 1)
+        steadyHand = if (action == SteadyHand) 5 else math.max(0, steadyHand - 1),
+        craftsmanship = craftsmanship,
+        control = control
       )
     }
   }
@@ -57,7 +62,7 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
       case action :: tail => eval(tail, states.head.apply(action) :: states)
     }
 
-    val initState = State(startDurability, startCP, startQuality, difficulty, 0)
+    val initState = State(startDurability, startCP, startQuality, difficulty, 0, baseCraftsmanship, baseControl)
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
@@ -117,13 +122,15 @@ object FFXIVCraftingHQ extends App {
   // SH BT BT HT BT HT MM BT BS BS BS => 312
   val archetype = "NOP NOP NOP NOP NOP SH BT BT HT BT HT MM BT BS BS BS".split(' ').toVector
   val model = new FFXIVCraftingHQ(
+    baseCraftsmanship = 10,
+    baseControl = 10,
     baseProgressIncrease = 26,
     baseQualityIncrease = 65,
     startDurability = 60,
     startCP = 190,
     startQuality = 0,
     difficulty = 55,
-    archetype
+    archetype = archetype
   )
   model.run()
 }
