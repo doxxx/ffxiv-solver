@@ -21,7 +21,7 @@ class FFXIVCraftingHQ(charLevel: Int,
                      qualityEfficiency: Double,
                      progressEfficiency: Double)
 
-  val NoAction = Action("NA", 0, 0, 0, 0, 0)
+  val NoAction = Action("NOP", 0, 0, 0, 0, 0)
   val BasicSynth = Action("BS", 10, 0, 0.9, 0, 1)
   val BasicTouch = Action("BT", 10, 18, 0.7, 1, 0)
   val MastersMend = Action("MM", -30, 92, 1, 0, 0)
@@ -203,6 +203,12 @@ class FFXIVCraftingHQ(charLevel: Int,
 
   val genePool = actions.toArray
 
+  val maxNameLength = actions.map(_.name.length).max
+  val actionFormatSpec = s"%-${maxNameLength}s"
+  def prettyAction(a: Action): String = {
+    actionFormatSpec.format(a.name)
+  }
+
   def prettyState(s: State): String = {
     "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f -- %s".format(s.durability, s.cp, s.quality, s.progress, s.toString)
   }
@@ -220,7 +226,7 @@ class FFXIVCraftingHQ(charLevel: Int,
     val archetypeGenes = archetype.map(actionMap)
     val (archetypeFitness, archetypeStates) = calcFitness(archetypeGenes)
     println(s"Archetype fitness = $archetypeFitness")
-    println(archetypeStates.map { case (a, s) => s"${a.name} => ${prettyState(s)}"}.mkString("\n"))
+    println(archetypeStates.map { case (a, s) => s"${prettyAction(a)} => ${prettyState(s)}"}.mkString("\n"))
 
     println()
 
@@ -238,18 +244,18 @@ class FFXIVCraftingHQ(charLevel: Int,
     println(s"Total time: ${elapsed/1000}s")
     println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
     println()
-    println(states.map { case (a, s) => s"${a.name} => ${prettyState(s)}"}.mkString("\n"))
+    println(states.map { case (a, s) => s"${prettyAction(a)} => ${prettyState(s)}"}.mkString("\n"))
   }
 }
 
 object FFXIVCraftingHQ extends App {
-  // Blank archetype: NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA
+  // Blank archetype: NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
   // IQ BT BT BT BT BS MM RU BS BS BT BS => 241.5
   // IQ BS BS BT BT HT MM SH BT HT BS BS
-  // IQ BS BS BT BT HT MM SH BT HT NA BS
+  // IQ BS BS BT BT HT MM SH BT HT NOP BS
   // IQ SH BS BS BT BT HT MM SH HT HT HT BS => 353.5
   // IQ SH BS BS BT HT MM SH HT HT HT BT BS => 354.0
-  val archetype = "NA NA NA NA NA NA IQ SH BS BS BT BT HT MM SH HT HT HT BS".split(' ').toVector
+  val archetype = "NOP NOP NOP NOP NOP NOP IQ SH BS BS BT BT HT MM SH HT HT HT BS".split(' ').toVector
   val model = new FFXIVCraftingHQ(
     charLevel = 12,
     recipeLevel = 12,
