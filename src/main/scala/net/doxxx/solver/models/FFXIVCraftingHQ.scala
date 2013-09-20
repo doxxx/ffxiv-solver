@@ -29,7 +29,7 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
   val WasteNot = Action("WN", 0, 56, 1, 0, 0) // Reduces loss of durability by 50% for the next four steps
 
   val actions = IndexedSeq(
-    NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand
+    NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand, HastyTouch
   )
   val actionMap: Map[String,Action] = actions.map(a => a.name -> a).toMap
 
@@ -111,8 +111,10 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
 
 object FFXIVCraftingHQ extends App {
   // Blank archetype: NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
-  // Best: ~234 <= BS SH BT BT BT BT MM BS BS
-  val archetype = "NOP NOP NOP NOP NOP NOP BS SH BT BT BT BT MM BS BS".split(' ').toVector
+  // BS SH BT BT BT BT MM BS BS => ~234
+  // BS SH HT HT BT MM SH HT BT HT BS BS => 299
+  // SH BT BT HT BT HT MM BT BS BS BS => 312
+  val archetype = "NOP NOP NOP NOP NOP SH BT BT HT BT HT MM BT BS BS BS".split(' ').toVector
   val model = new FFXIVCraftingHQ(
     baseProgressIncrease = 26,
     baseQualityIncrease = 65,
