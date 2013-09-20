@@ -21,17 +21,19 @@ class FFXIVCraftingHQ(charLevel: Int,
                      qualityEfficiency: Double,
                      progressEfficiency: Double)
 
-  val NoAction = Action("NOP", 0, 0, 0, 0, 0)
+  val NoAction = Action("NA", 0, 0, 0, 0, 0)
   val BasicSynth = Action("BS", 10, 0, 0.9, 0, 1)
   val BasicTouch = Action("BT", 10, 18, 0.7, 1, 0)
-  val MastersMend = Action("MM", -30, 94, 1, 0, 0)
+  val MastersMend = Action("MM", -30, 92, 1, 0, 0)
   val InnerQuiet = Action("IQ", 0, 18, 1, 0, 0) // toggle, quality increases will increase control
   val SteadyHand = Action("SH", 0, 22, 1, 0, 0) // Improves action success rate by 20% for the next five steps
-  val HastyTouch = Action("HT", 10, 0, 0.5, 0, 0)
+  val HastyTouch = Action("HT", 10, 0, 0.5, 1, 0)
   val WasteNot = Action("WN", 0, 56, 1, 0, 0) // Reduces loss of durability by 50% for the next four steps
+  val Rumination = Action("RU", 0, 0, 1, 0, 0) // Removes IQ and returns CP proportional to # of control increases
+  val ByregotsBlessing = Action("BB", 10, 24, 0.9, 1, 0) // Increases quality by 100% + 20% for each bonus to control granted by IQ
 
   val actions = IndexedSeq(
-    NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand, HastyTouch
+    NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand, HastyTouch, InnerQuiet, Rumination
   )
   val actionMap: Map[String,Action] = actions.map(a => a.name -> a).toMap
 
@@ -60,56 +62,117 @@ class FFXIVCraftingHQ(charLevel: Int,
 
   */
 
-  def effectiveProgressIncrease(craftsmanship: Double): Int = {
-    val levelDiff = charLevel - recipeLevel
-    val correctionFactor = {
-      if (levelDiff >= -5 && levelDiff <= 0) 0.10 * levelDiff
-      else if (levelDiff > 0 && levelDiff <= 5) 0.05 * levelDiff
-      else if (levelDiff > 5) 0.022 * levelDiff + 0.15
-      else 0
-    }
-    val baseProgress = 0.21 * craftsmanship + 1.6
-
-    math.round(baseProgress * (1 + correctionFactor)).toInt
-  }
-
-  def effectiveQualityIncrease(control: Double): Int = {
-    val levelDiff = charLevel - recipeLevel
-    val correctionFactor = {
-      if (levelDiff >= -5 && levelDiff <= 0) 0.05 * levelDiff
-      else 0
-    }
-    val baseQuality = 0.36 * control + 34
-
-    math.round(baseQuality * (1 + correctionFactor)).toInt
-  }
-
   case class State(durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int,
-                    craftsmanship: Double, control: Double) {
+                    craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double)
+  {
     def apply(action: Action) = {
-      val successRate = math.min(1, action.successRate + (if (steadyHand > 0) 0.2 else 0))
       copy(
-        durability - action.durabilityCost,
-        cp - action.cpCost,
-        quality + effectiveQualityIncrease(control) * action.qualityEfficiency * successRate,
-        progress - effectiveProgressIncrease(craftsmanship) * action.progressEfficiency * successRate,
-        steadyHand = if (action == SteadyHand) 5 else math.max(0, steadyHand - 1),
-        craftsmanship = craftsmanship,
-        control = control
+        calcDurability(action),
+        calcCP(action),
+        calcQuality(action),
+        calcProgress(action),
+        calcSteadyHand(action),
+        calcCraftsmanship(action),
+        calcControl(action),
+        calcInnerQuiet(action),
+        calcInnerQuietCount(action)
       )
     }
+
+
+    def successRate(action: Action): Double = {
+      math.min(1, action.successRate + (if (steadyHand > 0) 0.2 else 0))
+    }
+
+    def effectiveProgressIncrease: Int = {
+      val levelDiff = charLevel - recipeLevel
+      val correctionFactor = {
+        if (levelDiff >= -5 && levelDiff <= 0) 0.10 * levelDiff
+        else if (levelDiff > 0 && levelDiff <= 5) 0.05 * levelDiff
+        else if (levelDiff > 5) 0.022 * levelDiff + 0.15
+        else 0
+      }
+      val baseProgress = 0.21 * craftsmanship + 1.6
+
+      math.round(baseProgress * (1 + correctionFactor)).toInt
+    }
+
+    def effectiveQualityIncrease: Int = {
+      val levelDiff = charLevel - recipeLevel
+      val correctionFactor = {
+        if (levelDiff >= -5 && levelDiff <= 0) 0.05 * levelDiff
+        else 0
+      }
+      val baseQuality = 0.36 * control + 34
+
+      math.round(baseQuality * (1 + correctionFactor)).toInt
+    }
+
+    def ruminationCPIncrease(action: Action): Int = {
+      if (action == Rumination && innerQuietCount > 0) {
+        math.round(math.min(60, (21 * innerQuietCount - math.pow(innerQuietCount, 2) + 10) / 2)).toInt
+      }
+      else 0
+    }
+
+    def calcDurability(action: Action): Int = {
+      math.min(startDurability, durability - action.durabilityCost)
+    }
+
+    def calcCP(action: Action): Int = {
+      math.min(startCP, cp - action.cpCost + ruminationCPIncrease(action))
+    }
+
+    def calcQuality(action: Action): Double = {
+      quality + effectiveQualityIncrease * action.qualityEfficiency * successRate(action)
+    }
+
+    def calcProgress(action: Action): Double = {
+      progress - effectiveProgressIncrease * action.progressEfficiency * successRate(action)
+    }
+
+    def calcSteadyHand(action: Action): Int = {
+      if (action == SteadyHand) 5 else math.max(0, steadyHand - 1)
+    }
+
+    def calcCraftsmanship(action: Action): Double = {
+      craftsmanship
+    }
+
+    def calcControl(action: Action): Double = {
+      baseControl + baseControl * calcInnerQuietCount(action) * 0.2
+    }
+
+    def calcInnerQuiet(action: Action): Boolean = (action, innerQuiet) match {
+      case (InnerQuiet, false) => true
+      case (InnerQuiet, true) => true
+      case (Rumination, true) => false
+      case (_, _) => innerQuiet
+    }
+
+    def calcInnerQuietCount(action: Action): Double = {
+      {
+        if (action == Rumination)
+          0
+        else if (innerQuiet && action.qualityEfficiency > 0)
+          innerQuietCount + 1 * successRate(action)
+        else
+          innerQuietCount
+      }
+    }
+
   }
 
   val penalty = 10000
 
-  def fitnessFunc(steps: Vector[Action]): Double = {
+  def calcFitness(steps: Vector[Action]): (Double, Vector[(Action,State)]) = {
     @tailrec
     def eval(steps: List[Action], states: List[State]): List[State] = steps match {
       case Nil => states
       case action :: tail => eval(tail, states.head.apply(action) :: states)
     }
 
-    val initState = State(startDurability, startCP, startQuality, difficulty, 0, baseCraftsmanship, baseControl)
+    val initState = State(startDurability, startCP, startQuality, difficulty, 0, baseCraftsmanship, baseControl, false, 0)
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
@@ -118,10 +181,16 @@ class FFXIVCraftingHQ(charLevel: Int,
     val finalDurabilityPenalty = if (finalState.durability < 0) penalty else 0
     val finalProgressPenalty = if (finalState.progress > 0) penalty else 0
 
-    (finalState.quality
-      - (durabilityViolations + progressViolations + cpViolations) * penalty
+    val fitness = (finalState.quality - (durabilityViolations + progressViolations + cpViolations) * penalty
       - finalDurabilityPenalty
       - finalProgressPenalty)
+
+    (fitness, steps.zip(states.reverse.tail))
+  }
+
+  def fitnessFunc(steps: Vector[Action]): Double = {
+    val (fitness, _) = calcFitness(steps)
+    fitness
   }
 
   val timeLimitTest = Experiment.timeLimitTest(60, SECONDS)
@@ -134,6 +203,10 @@ class FFXIVCraftingHQ(charLevel: Int,
 
   val genePool = actions.toArray
 
+  def prettyState(s: State): String = {
+    "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f -- %s".format(s.durability, s.cp, s.quality, s.progress, s.toString)
+  }
+
   def run() {
     val experiment = new Experiment[Action, Vector[Action]](
       mutationRate = 0.01,
@@ -145,7 +218,11 @@ class FFXIVCraftingHQ(charLevel: Int,
     )
 
     val archetypeGenes = archetype.map(actionMap)
-    println(s"archetype fitness = ${fitnessFunc(archetypeGenes)}")
+    val (archetypeFitness, archetypeStates) = calcFitness(archetypeGenes)
+    println(s"Archetype fitness = $archetypeFitness")
+    println(archetypeStates.map { case (a, s) => s"${a.name} => ${prettyState(s)}"}.mkString("\n"))
+
+    println()
 
     val start = System.currentTimeMillis()
     val (evolvedSpecimens, epoch) = experiment.evolution(experiment.randomPool(archetypeGenes))
@@ -154,20 +231,25 @@ class FFXIVCraftingHQ(charLevel: Int,
     println()
 
     val best = evolvedSpecimens.maxBy(fitnessFunc)
+    val (fitness, states) = calcFitness(best)
     val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", " ", "]")
-    println(s"$bestPretty => ${fitnessFunc(best)}")
+    println(s"$bestPretty => ${fitness}")
     println(s"Generations: ${epoch+1}")
     println(s"Total time: ${elapsed/1000}s")
     println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
+    println()
+    println(states.map { case (a, s) => s"${a.name} => ${prettyState(s)}"}.mkString("\n"))
   }
 }
 
 object FFXIVCraftingHQ extends App {
-  // Blank archetype: NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
-  // BS SH BT BT BT BT MM BS BS => ~234
-  // BS SH HT HT BT MM SH HT BT HT BS BS => 299
-  // SH BT BT HT BT HT MM BT BS BS BS => 312
-  val archetype = "NOP NOP NOP NOP NOP BS BS BS MM HT SH BT BT BT BT BS".split(' ').toVector
+  // Blank archetype: NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA
+  // IQ BT BT BT BT BS MM RU BS BS BT BS => 241.5
+  // IQ BS BS BT BT HT MM SH BT HT BS BS
+  // IQ BS BS BT BT HT MM SH BT HT NA BS
+  // IQ SH BS BS BT BT HT MM SH HT HT HT BS => 353.5
+  // IQ SH BS BS BT HT MM SH HT HT HT BT BS => 354.0
+  val archetype = "NA NA NA NA NA NA IQ SH BS BS BT BT HT MM SH HT HT HT BS".split(' ').toVector
   val model = new FFXIVCraftingHQ(
     charLevel = 12,
     recipeLevel = 12,
