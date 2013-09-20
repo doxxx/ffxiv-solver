@@ -4,7 +4,9 @@ import scala.annotation.tailrec
 import scala.concurrent.duration._
 import net.doxxx.solver.Experiment
 
-class FFXIVCraftingHQ(baseCraftsmanship: Int,
+class FFXIVCraftingHQ(charLevel: Int,
+                      recipeLevel: Int,
+                      baseCraftsmanship: Int,
                       baseControl: Int,
                       baseProgressIncrease: Int,
                       baseQualityIncrease: Int,
@@ -122,6 +124,8 @@ object FFXIVCraftingHQ extends App {
   // SH BT BT HT BT HT MM BT BS BS BS => 312
   val archetype = "NOP NOP NOP NOP NOP SH BT BT HT BT HT MM BT BS BS BS".split(' ').toVector
   val model = new FFXIVCraftingHQ(
+    charLevel = 12,
+    recipeLevel = 12,
     baseCraftsmanship = 10,
     baseControl = 10,
     baseProgressIncrease = 26,
