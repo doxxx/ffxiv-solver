@@ -4,7 +4,7 @@ import scala.util.Random
 import scala.annotation.tailrec
 import scala.concurrent.duration.TimeUnit
 
-class Experiment[Gene, Specimen <% Iterable[Gene]]
+class Solver[Gene, Specimen <% Iterable[Gene]]
 (mutationRate: Double,
  population: Int,
  genePool: IndexedSeq[Gene],
@@ -85,7 +85,7 @@ class Experiment[Gene, Specimen <% Iterable[Gene]]
       if (mutationRate > Random.nextFloat) randomGenes.head else gene))
 }
 
-object Experiment {
+object Solver {
 
   private class FitnessHistory {
     var values: List[Double] = Nil

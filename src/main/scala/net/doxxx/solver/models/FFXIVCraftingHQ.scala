@@ -2,7 +2,7 @@ package net.doxxx.solver.models
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
-import net.doxxx.solver.Experiment
+import net.doxxx.solver.Solver
 
 class FFXIVCraftingHQ(charLevel: Int,
                       recipeLevel: Int,
@@ -202,9 +202,9 @@ class FFXIVCraftingHQ(charLevel: Int,
     fitness
   }
 
-  val timeLimitTest = Experiment.timeLimitTest(60, SECONDS)
-  val stagnationTest = Experiment.stagnationTest(0.9, fitnessFunc)
-  val convergenceTest = Experiment.convergenceTest(1000, fitnessFunc)
+  val timeLimitTest = Solver.timeLimitTest(60, SECONDS)
+  val stagnationTest = Solver.stagnationTest(0.9, fitnessFunc)
+  val convergenceTest = Solver.convergenceTest(1000, fitnessFunc)
 
   def stopCondition(specimens: List[Vector[Action]]): Boolean = {
     timeLimitTest() || stagnationTest(specimens)
@@ -223,7 +223,7 @@ class FFXIVCraftingHQ(charLevel: Int,
   }
 
   def run() {
-    val experiment = new Experiment[Action, Vector[Action]](
+    val experiment = new Solver[Action, Vector[Action]](
       mutationRate = 0.01,
       population = 500,
       genePool,
