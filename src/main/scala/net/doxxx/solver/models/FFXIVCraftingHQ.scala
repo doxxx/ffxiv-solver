@@ -233,7 +233,7 @@ class FFXIVCraftingHQ(charLevel: Int,
   }
 
   def run() {
-    val experiment = new Solver[Action, Vector[Action]](
+    val solver = new Solver[Action, Vector[Action]](
       mutationRate = 0.01,
       population = 500,
       genePool,
@@ -250,7 +250,7 @@ class FFXIVCraftingHQ(charLevel: Int,
     println()
 
     val start = System.currentTimeMillis()
-    val (evolvedSpecimens, epoch) = experiment.evolution(experiment.randomPool(archetypeGenes))
+    val (evolvedSpecimens, epoch) = solver.evolution(solver.randomPool(archetypeGenes))
     val elapsed = System.currentTimeMillis() - start
 
     println()
