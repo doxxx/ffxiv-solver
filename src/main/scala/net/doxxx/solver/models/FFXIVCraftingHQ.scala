@@ -2,7 +2,7 @@ package net.doxxx.solver.models
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
-import net.doxxx.solver.Solver
+import net.doxxx.solver.{BreedingStrategies, Solver}
 
 class FFXIVCraftingHQ(charLevel: Int,
                       recipeLevel: Int,
@@ -241,7 +241,8 @@ class FFXIVCraftingHQ(charLevel: Int,
       genePool,
       specimenBuilder,
       fitnessFunc,
-      stopCondition
+      stopCondition,
+      BreedingStrategies.Transposition
     )
 
     val archetypeGenes = archetype.map(actionMap)

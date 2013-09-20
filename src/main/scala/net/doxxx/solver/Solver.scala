@@ -3,6 +3,7 @@ package net.doxxx.solver
 import scala.util.Random
 import scala.annotation.tailrec
 import scala.concurrent.duration.TimeUnit
+import net.doxxx.solver.BreedingStrategies.BreedingStrategy
 
 class Solver[Gene, Specimen <% Iterable[Gene]]
 (mutationRate: Double,
@@ -10,7 +11,8 @@ class Solver[Gene, Specimen <% Iterable[Gene]]
  genePool: IndexedSeq[Gene],
  specimenBuilder: Iterable[Gene] => Specimen,
  fitnessCalc: Specimen => Double,
- stopCondition: List[Specimen] => Boolean)
+ stopCondition: List[Specimen] => Boolean,
+ breedingStrategy: BreedingStrategy)
 {
   def randomGenes: Stream[Gene] = genePool(Random.nextInt(genePool.length)) #:: randomGenes
   def newSpecimen(len: Int): Specimen = specimenBuilder(randomGenes.take(len))
@@ -67,18 +69,35 @@ class Solver[Gene, Specimen <% Iterable[Gene]]
     }.toList
   }
 
+  import BreedingStrategies._
+
   def breed(pool: Pool, count: Int): Pool = {
-    randomPairs(pool).take(count).map {
-      case (a, b) => crossover(a, b)
-    }.toList
+    breedingStrategy match {
+      case Crossover =>
+        randomPairs(pool).take(count).map {
+          case (a, b) => crossover(a, b)
+        }.toList
+      case Transposition =>
+        randomIndividuals(pool).take(count).map(transpose).toList
+    }
   }
 
   def randomPairs(pool: Pool): Stream[(Specimen,Specimen)] =
     (pool(Random.nextInt(pool.size)), pool(Random.nextInt(pool.size))) #:: randomPairs(pool)
 
+  def randomIndividuals(pool: Pool): Stream[Specimen] =
+    pool(Random.nextInt(pool.size)) #:: randomIndividuals(pool)
+
   def crossover(a: Specimen, b: Specimen): Specimen =
     mutate(specimenBuilder(a.zip(b).map(gene =>
       if (Random.nextFloat >= 0.5) gene._1 else gene._2)))
+
+  def transpose(s: Specimen): Specimen = {
+    val si = s.toIndexedSeq
+    val i1 = Random.nextInt(si.length)
+    val i2 = Random.nextInt(si.length)
+    mutate(specimenBuilder(si.patch(i1, si.slice(i2, i2+1), 1)))
+  }
 
   def mutate(s: Specimen): Specimen =
     specimenBuilder(s.map(gene =>
@@ -113,4 +132,11 @@ object Solver {
     System.currentTimeMillis() - start > unit.toMillis(limit)
   }
 
+}
+
+object BreedingStrategies extends Enumeration {
+  val Crossover = Value("Crossover")
+  val Transposition = Value("Transposition")
+
+  type BreedingStrategy = Value
 }
