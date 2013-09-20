@@ -91,7 +91,7 @@ object Experiment {
     var values: List[Double] = Nil
   }
 
-  def fitnessHistoryTest[Gene, Specimen <% Iterable[Gene]](fitnessHistory: Int, fitnessCalc: Specimen => Double) = {
+  def convergenceTest[Gene, Specimen <% Iterable[Gene]](fitnessHistory: Int, fitnessCalc: Specimen => Double) = {
     val history = new FitnessHistory;
     { (specimens: List[Specimen]) => Boolean
       val bestFitness = specimens.map(fitnessCalc).max
@@ -100,7 +100,7 @@ object Experiment {
     }
   }
 
-  def fitnessPercentageTest[Gene, Specimen <% Iterable[Gene]](fitnessThreshold: Double, fitnessCalc: Specimen => Double) = {
+  def stagnationTest[Gene, Specimen <% Iterable[Gene]](fitnessThreshold: Double, fitnessCalc: Specimen => Double) = {
     { (specimens: List[Specimen]) => Boolean
       val fitnessValues = specimens.map(fitnessCalc)
       val best = fitnessValues.max

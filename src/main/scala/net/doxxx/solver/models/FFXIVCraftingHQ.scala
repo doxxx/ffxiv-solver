@@ -73,10 +73,11 @@ class FFXIVCraftingHQ(baseProgressIncrease: Int,
   }
 
   val timeLimitTest = Experiment.timeLimitTest(60, SECONDS)
-  val fitnessTest = Experiment.fitnessPercentageTest(0.9, fitnessFunc)
+  val stagnationTest = Experiment.stagnationTest(0.9, fitnessFunc)
+  val convergenceTest = Experiment.convergenceTest(1000, fitnessFunc)
 
   def stopCondition(specimens: List[Vector[Action]]): Boolean = {
-    timeLimitTest() || fitnessTest(specimens)
+    timeLimitTest() || stagnationTest(specimens)
   }
 
   val genePool = actions.toArray
