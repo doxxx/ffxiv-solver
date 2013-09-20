@@ -197,10 +197,12 @@ class FFXIVCraftingHQ(charLevel: Int,
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
     val progressViolations = intermediateStates.count(_.progress < 0)
     val cpViolations = states.count(_.cp < 0)
+    val ruminationSeqViolations = math.max(0, steps.segmentLength({ _ == Rumination}, 0) - 1)
     val finalDurabilityPenalty = if (finalState.durability < 0) penalty else 0
     val finalProgressPenalty = if (finalState.progress > 0) penalty else 0
 
-    val fitness = (finalState.quality - (durabilityViolations + progressViolations + cpViolations) * penalty
+    val fitness = (finalState.quality
+      - (durabilityViolations + progressViolations + cpViolations + ruminationSeqViolations) * penalty
       - finalDurabilityPenalty
       - finalProgressPenalty)
 
