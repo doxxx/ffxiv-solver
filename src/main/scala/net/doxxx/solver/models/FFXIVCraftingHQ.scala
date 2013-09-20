@@ -26,11 +26,20 @@ class FFXIVCraftingHQ(charLevel: Int,
   val BasicTouch = Action("BT", 10, 18, 0.7, 1, 0)
   val MastersMend = Action("MM", -30, 92, 1, 0, 0)
   val InnerQuiet = Action("IQ", 0, 18, 1, 0, 0) // toggle, quality increases will increase control
-  val SteadyHand = Action("SH", 0, 22, 1, 0, 0) // Improves action success rate by 20% for the next five steps
+  val SteadyHand = Action("SH", 0, 22, 1, 0, 0) // Improves action success rate by 20% for the next 5 steps
   val HastyTouch = Action("HT", 10, 0, 0.5, 1, 0)
-  val WasteNot = Action("WN", 0, 56, 1, 0, 0) // Reduces loss of durability by 50% for the next four steps
   val Rumination = Action("RU", 0, 0, 1, 0, 0) // Removes IQ and returns CP proportional to # of control increases
-  val ByregotsBlessing = Action("BB", 10, 24, 0.9, 1, 0) // Increases quality by 100% + 20% for each bonus to control granted by IQ
+  val StandardTouch = Action("ST", 10, 38, 0.8, 1.25, 0)
+  val StandardSynthesis = Action("SS", 10, 15, 0.9, 0, 1.5)
+  val AdvancedTouch = Action("AT", 10, 52, 0.9, 1.5, 0)
+  val MastersMend2 = Action("MM2", -60, 150, 1, 0, 0)
+//  val WasteNot = Action("WN", 0, 56, 1, 0, 0) // Reduces loss of durability by 50% for the next 4 steps
+//  val Manipulation = Action("MP", 0, 88, 1, 0, 0) // Returns 10 durability every step for the next 3 steps
+//  val ComfortZone = Action("CZ", 0, 58, 1, 0, 0) // Returns 8 CP after each step for the next 10 steps
+//  val WasteNot2 = Action("WN2", 0, 95, 1, 0, 0) // Reduces loss of durability by 50% for the next 8 steps
+//  val GreatStrides = Action("GS", 0, 32, 1, 0, 0) // Doubles the efficiency of a 'Touch' action, consuming the Great Strides effect. Lasts 3 steps.
+//  val ElementalBrand = Action("EB", 10, 15, 0.9, 0, 2) // Increases progress. Progress efficiency is doubled when recipe affinity matches element.
+//  val ByregotsBlessing = Action("BB", 10, 24, 0.9, 1, 0) // Increases quality by 100% + 20% for each bonus to control granted by IQ
 
   val actions = IndexedSeq(
     NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand, HastyTouch, InnerQuiet, Rumination
