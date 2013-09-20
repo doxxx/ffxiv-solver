@@ -181,7 +181,17 @@ class FFXIVCraftingHQ(charLevel: Int,
       case action :: tail => eval(tail, states.head.apply(action) :: states)
     }
 
-    val initState = State(startDurability, startCP, startQuality, difficulty, 0, baseCraftsmanship, baseControl, false, 0)
+    val initState = State(
+      durability = startDurability,
+      cp = startCP,
+      quality = startQuality,
+      progress = difficulty,
+      steadyHand = 0,
+      craftsmanship = baseCraftsmanship,
+      control = baseControl,
+      innerQuiet = false,
+      innerQuietCount = 0
+    )
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
@@ -248,7 +258,7 @@ class FFXIVCraftingHQ(charLevel: Int,
     val best = evolvedSpecimens.maxBy(fitnessFunc)
     val (fitness, states) = calcFitness(best)
     val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", " ", "]")
-    println(s"$bestPretty => ${fitness}")
+    println(s"$bestPretty => $fitness")
     println(s"Generations: ${epoch+1}")
     println(s"Total time: ${elapsed/1000}s")
     println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
