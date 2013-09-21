@@ -11,26 +11,47 @@ class Solver[Gene, Specimen <% Iterable[Gene]]
  genePool: IndexedSeq[Gene],
  specimenBuilder: Iterable[Gene] => Specimen,
  fitnessCalc: Specimen => Double,
- stopCondition: List[Specimen] => Boolean,
+ stopCondition: List[(Specimen, Double)] => Boolean,
  breedingStrategy: BreedingStrategy)
 {
   def randomGenes: Stream[Gene] = genePool(Random.nextInt(genePool.length)) #:: randomGenes
   def newSpecimen(len: Int): Specimen = specimenBuilder(randomGenes.take(len))
 
   type Pool = List[Specimen]
+  type Fitness = (Specimen, Double)
+  type NormalizedFitness = (Specimen, Double, Double)
+  type FitnessPool = List[Fitness]
 
   def randomPool(archetype: Specimen): Pool =
     archetype :: (1 until population).map(_ => newSpecimen(archetype.size)).toList
 
+  def evalFitness(pool: Pool): FitnessPool = pool.zip(pool.par.map(fitnessCalc).toList)
+
+  def evolution(pool: Pool): (Pool, Int) = {
+    evolution(evalFitness(pool))
+  }
+
   @tailrec
-  final def evolution(pool: Pool, epoch: Int = 0): (Pool, Int) = {
-    if (epoch % 100 == 0) {
-      val usedMemory = sys.runtime.totalMemory() - sys.runtime.freeMemory()
-      println(s"Generation #$epoch - ${usedMemory/1024/1024}MB")
-    }
+  final def evolution(pool: FitnessPool, epoch: Int = 0, elapsedTime: Long = 0): (Pool, Int) = {
+    val start = System.currentTimeMillis()
     val newGeneration = popReproduction(pool)
-    if (stopCondition(newGeneration)) (newGeneration, epoch)
-    else evolution(newGeneration, epoch + 1)
+
+    if (stopCondition(newGeneration)) {
+      (newGeneration.map(_._1), epoch)
+    }
+    else {
+      val newElapsedTime = elapsedTime + (System.currentTimeMillis() - start)
+
+      val timePerEpoch = newElapsedTime.toDouble / (epoch + 1)
+      val epochsPerReport = math.max(1, (1000 / timePerEpoch).toInt)
+      if (epoch % epochsPerReport == 0) {
+        val usedMemory = sys.runtime.totalMemory() - sys.runtime.freeMemory()
+        val (_, bestFitness) = pool.maxBy(_._2)
+        println("Generation #%d - %dMB -- %1.1fms per generation -- %1.1f".format(epoch, usedMemory/1024/1024, timePerEpoch, bestFitness))
+      }
+
+      evolution(newGeneration, epoch + 1, newElapsedTime)
+    }
   }
 
   /*
@@ -43,50 +64,46 @@ class Solver[Gene, Specimen <% Iterable[Gene]]
     Replace least-fit population with new individuals
   */
 
-  def popReproduction(pool: Pool): Pool = {
-    val fitnessPool = evalFitness(pool)
-    val best = selectBest(fitnessPool)
+  def popReproduction(pool: FitnessPool): FitnessPool = {
+    val best = selectBest(pool)
     val children = breed(best, population - best.size)
     best ::: children
   }
 
-  type Fitness = (Specimen, Double)
-  type FitnessPool = List[Fitness]
-
-  def evalFitness(pool: Pool): FitnessPool = pool.zip(normalize(pool.par.map(fitnessCalc).toList))
-
-  def normalize(values: Seq[Double]): Seq[Double] = {
-    val min = values.min
-    val max = values.max
-    values.map(v => (v - ((max + min) / 2)) / ((max - min) / 2))
+  def normalize(pool: FitnessPool): List[NormalizedFitness] = {
+    val (_, min) = pool.minBy(_._2)
+    val (_, max) = pool.maxBy(_._2)
+    pool.map{ case (s, f) => (s, f, (f - ((max + min) / 2)) / ((max - min) / 2)) }
   }
 
-  def selectBest(pool: FitnessPool): Pool = {
-    pool.par.filter {
-      case (s, f) => f > 0
+  def selectBest(pool: FitnessPool): FitnessPool = {
+    normalize(pool).par.filter {
+      case (s, f, nf) => nf > 0
     }.map {
-      case (s, f) => s
+      case (s, f, _) => (s, f)
     }.toList
   }
 
   import BreedingStrategies._
 
-  def breed(pool: Pool, count: Int): Pool = {
-    breedingStrategy match {
-      case Crossover =>
-        randomPairs(pool).take(count).map {
-          case (a, b) => crossover(a, b)
-        }.toList
-      case Transposition =>
-        randomIndividuals(pool).take(count).map(transpose).toList
-    }
+  def breed(pool: FitnessPool, count: Int): FitnessPool = {
+    evalFitness(
+      breedingStrategy match {
+        case Crossover =>
+          randomPairs(pool).take(count).map {
+            case (a, b) => crossover(a, b)
+          }.toList
+        case Transposition =>
+          randomIndividuals(pool).take(count).map(transpose).toList
+      }
+    )
   }
 
-  def randomPairs(pool: Pool): Stream[(Specimen,Specimen)] =
-    (pool(Random.nextInt(pool.size)), pool(Random.nextInt(pool.size))) #:: randomPairs(pool)
+  def randomPairs(pool: FitnessPool): Stream[(Specimen,Specimen)] =
+    (pool(Random.nextInt(pool.size))._1, pool(Random.nextInt(pool.size))._1) #:: randomPairs(pool)
 
-  def randomIndividuals(pool: Pool): Stream[Specimen] =
-    pool(Random.nextInt(pool.size)) #:: randomIndividuals(pool)
+  def randomIndividuals(pool: FitnessPool): Stream[Specimen] =
+    pool(Random.nextInt(pool.size))._1 #:: randomIndividuals(pool)
 
   def crossover(a: Specimen, b: Specimen): Specimen =
     mutate(specimenBuilder(a.zip(b).map(gene =>
@@ -110,20 +127,19 @@ object Solver {
     var values: List[Double] = Nil
   }
 
-  def convergenceTest[Gene, Specimen <% Iterable[Gene]](fitnessHistory: Int, fitnessCalc: Specimen => Double) = {
+  def convergenceTest[Gene, Specimen <% Iterable[Gene]](fitnessHistory: Int) = {
     val history = new FitnessHistory;
-    { (specimens: List[Specimen]) => Boolean
-      val bestFitness = specimens.map(fitnessCalc).max
+    { (specimens: List[(Specimen,Double)]) => Boolean
+      val (_, bestFitness) = specimens.maxBy(_._2)
       history.values = (bestFitness :: history.values).take(fitnessHistory)
       history.values.count(_ == bestFitness) == fitnessHistory
     }
   }
 
-  def stagnationTest[Gene, Specimen <% Iterable[Gene]](fitnessThreshold: Double, fitnessCalc: Specimen => Double) = {
-    { (specimens: List[Specimen]) => Boolean
-      val fitnessValues = specimens.map(fitnessCalc)
-      val best = fitnessValues.max
-      fitnessValues.count(_ == best) / specimens.size.toDouble > fitnessThreshold
+  def stagnationTest[Gene, Specimen <% Iterable[Gene]](fitnessThreshold: Double) = {
+    { (specimens: List[(Specimen,Double)]) => Boolean
+      val (_, bestFitness) = specimens.maxBy(_._2)
+      specimens.count(_._2 == bestFitness) / specimens.size.toDouble > fitnessThreshold
     }
   }
 

@@ -215,10 +215,10 @@ class FFXIVCraftingHQ(charLevel: Int,
   }
 
   val timeLimitTest = Solver.timeLimitTest(60, SECONDS)
-  val stagnationTest = Solver.stagnationTest(0.9, fitnessFunc)
-  val convergenceTest = Solver.convergenceTest(1000, fitnessFunc)
+  val stagnationTest = Solver.stagnationTest[Action,Vector[Action]](0.9)
+  val convergenceTest = Solver.convergenceTest[Action,Vector[Action]](1000)
 
-  def stopCondition(specimens: List[Vector[Action]]): Boolean = {
+  def stopCondition(specimens: List[(Vector[Action], Double)]): Boolean = {
     timeLimitTest() || stagnationTest(specimens)
   }
 
