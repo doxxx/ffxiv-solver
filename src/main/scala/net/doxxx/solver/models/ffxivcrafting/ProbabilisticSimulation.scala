@@ -188,7 +188,7 @@ object ProbabilisticSimulation extends App {
   val (archetypeFitness, archetypeStates) = model.simulate(archetypeGenes)
   println(s"Archetype fitness = $archetypeFitness")
 
-  println(archetypeStates.map { case (a, s) => s"$a => $s"}.mkString("\n"))
+  println(archetypeStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
 
   println()
 
@@ -203,6 +203,6 @@ object ProbabilisticSimulation extends App {
   println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
   println()
 
-  val (_, actionStates) = model.simulate(best)
+  val (_, actionStates) = model.simulate(best.filter(_ != NoAction))
   println(actionStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
 }
