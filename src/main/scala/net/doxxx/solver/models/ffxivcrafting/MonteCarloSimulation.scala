@@ -218,14 +218,19 @@ object MonteCarloSimulation extends App {
 
   val fitnesses = evolvedSpecimens.map(model.fitnessFunc)
   val (best, fitness) = evolvedSpecimens.zip(fitnesses).maxBy(_._2)
-  val bestPretty = best.filter(_ != NoAction).map(_.name).mkString("[", " ", "]")
+
+  val (_, actionStates) = model.simulate(best.filter(_ != NoAction))
+  val trimmedActionStates = actionStates.takeWhile {
+    case (a, s) => s.durability >= 0 && s.progress >= 0
+  }
+
+  val bestPretty = trimmedActionStates.map(_._1.name).mkString("[", " ", "]")
   println(s"$bestPretty => $fitness")
   println(s"Generations: ${epoch+1}")
   println(s"Total time: ${elapsed/1000}s")
   println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
   println()
 
-  val (_, actionStates) = model.simulate(best)
-  println(actionStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
+  println(trimmedActionStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
 
 }
