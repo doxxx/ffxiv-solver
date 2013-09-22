@@ -123,14 +123,12 @@ class MonteCarloSimulation(charLevel: Int,
     }
 
     def calcInnerQuietCount(action: Action, succeeded: Boolean): Double = {
-      {
-        if (action == Rumination)
-          0
-        else if (innerQuiet && action.qualityEfficiency > 0 && succeeded)
-          innerQuietCount + 1
-        else
-          innerQuietCount
-      }
+      if (action == Rumination)
+        0
+      else if (innerQuiet && action.qualityEfficiency > 0 && succeeded)
+        innerQuietCount + 1
+      else
+        innerQuietCount
     }
 
   }
