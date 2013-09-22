@@ -19,7 +19,8 @@ class ProbabilisticSimulation(charLevel: Int,
 {
 
   case class PSState(durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int,
-                   craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double) extends State
+                     craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double,
+                     manipulation: Int) extends State
   {
     override def toString = "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
 
@@ -33,7 +34,8 @@ class ProbabilisticSimulation(charLevel: Int,
         calcCraftsmanship(action),
         calcControl(action),
         calcInnerQuiet(action),
-        calcInnerQuietCount(action)
+        calcInnerQuietCount(action),
+        calcManipulation(action)
       )
     }
 
@@ -74,7 +76,8 @@ class ProbabilisticSimulation(charLevel: Int,
     }
 
     def calcDurability(action: Action): Int = {
-      math.min(startDurability, durability - action.durabilityCost)
+      val bonus = if (manipulation > 0) 10 else 0
+      math.min(startDurability, durability - action.durabilityCost + bonus)
     }
 
     def calcCP(action: Action): Int = {
@@ -119,6 +122,10 @@ class ProbabilisticSimulation(charLevel: Int,
       }
     }
 
+    def calcManipulation(action: Action): Int = {
+      if (action == Manipulation) 3 else math.max(0, manipulation - 1)
+    }
+
   }
 
   val penalty = 10000
@@ -139,7 +146,8 @@ class ProbabilisticSimulation(charLevel: Int,
       craftsmanship = baseCraftsmanship,
       control = baseControl,
       innerQuiet = false,
-      innerQuietCount = 0
+      innerQuietCount = 0,
+      manipulation = 0
     )
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
@@ -167,9 +175,9 @@ class ProbabilisticSimulation(charLevel: Int,
 }
 
 object ProbabilisticSimulation extends App {
-  val availableActions = Seq("NOP", "BS", "BT", "MM", "SH", "IQ")
+  val availableActions = Seq("NOP", "BS", "BT", "HT", "MM", "SH", "IQ", "MP")
+  val archetype = "NOP NOP NOP NOP NOP BS IQ SH BT HT MP SH HT HT HT BT BS BS".split(' ').toVector
 
-  val archetype = "NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP".split(' ').toVector
   val model = new ProbabilisticSimulation(
     charLevel = 12,
     recipeLevel = 12,

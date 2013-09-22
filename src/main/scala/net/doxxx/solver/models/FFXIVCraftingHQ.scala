@@ -82,8 +82,8 @@ object FFXIVCraftingHQ {
   val StandardSynthesis = Action("SS", 10, 15, 0.9, 0, 1.5)
   val AdvancedTouch = Action("AT", 10, 52, 0.9, 1.5, 0)
   val MastersMend2 = Action("MM2", -60, 150, 1, 0, 0)
+  val Manipulation = Action("MP", 0, 88, 1, 0, 0) // Returns 10 durability every step for the next 3 steps
   //  val WasteNot = Action("WN", 0, 56, 1, 0, 0) // Reduces loss of durability by 50% for the next 4 steps
-  //  val Manipulation = Action("MP", 0, 88, 1, 0, 0) // Returns 10 durability every step for the next 3 steps
   //  val ComfortZone = Action("CZ", 0, 58, 1, 0, 0) // Returns 8 CP after each step for the next 10 steps
   //  val WasteNot2 = Action("WN2", 0, 95, 1, 0, 0) // Reduces loss of durability by 50% for the next 8 steps
   //  val GreatStrides = Action("GS", 0, 32, 1, 0, 0) // Doubles the efficiency of a 'Touch' action, consuming the Great Strides effect. Lasts 3 steps.
@@ -92,7 +92,7 @@ object FFXIVCraftingHQ {
 
   val allActions = Seq(
     NoAction, BasicSynth, BasicTouch, MastersMend, InnerQuiet, SteadyHand, HastyTouch, Rumination, StandardTouch,
-    StandardSynthesis, AdvancedTouch, MastersMend2
+    StandardSynthesis, AdvancedTouch, MastersMend2, Manipulation
   )
   val actionMap: Map[String, Action] = allActions.map(a => a.name -> a).toMap
 

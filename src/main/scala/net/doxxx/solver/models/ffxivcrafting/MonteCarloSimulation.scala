@@ -20,7 +20,8 @@ class MonteCarloSimulation(charLevel: Int,
 {
 
   case class MCSState(prevSucceeded: Boolean, durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int,
-                   craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double) extends State
+                      craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double,
+                      manipulation: Int) extends State
   {
 
     override def toString = "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
@@ -41,7 +42,8 @@ class MonteCarloSimulation(charLevel: Int,
           calcCraftsmanship(action, succeeded),
           calcControl(action, succeeded),
           calcInnerQuiet(action, succeeded),
-          calcInnerQuietCount(action, succeeded)
+          calcInnerQuietCount(action, succeeded),
+          calcManipulation(action, succeeded)
         )
       }
     }
@@ -82,7 +84,8 @@ class MonteCarloSimulation(charLevel: Int,
     }
 
     def calcDurability(action: Action, succeeded: Boolean): Int = {
-      math.min(startDurability, durability - action.durabilityCost)
+      val bonus = if (manipulation > 0) 10 else 0
+      math.min(startDurability, durability - action.durabilityCost + bonus)
     }
 
     def calcCP(action: Action, succeeded: Boolean): Int = {
@@ -131,6 +134,10 @@ class MonteCarloSimulation(charLevel: Int,
         innerQuietCount
     }
 
+    def calcManipulation(action: Action, succeeded: Boolean): Int = {
+      if (action == Manipulation) 3 else math.max(0, manipulation - 1)
+    }
+
   }
 
   val penalty = 10000
@@ -152,7 +159,8 @@ class MonteCarloSimulation(charLevel: Int,
       craftsmanship = baseCraftsmanship,
       control = baseControl,
       innerQuiet = false,
-      innerQuietCount = 0
+      innerQuietCount = 0,
+      manipulation = 0
     )
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
@@ -188,8 +196,8 @@ class MonteCarloSimulation(charLevel: Int,
 }
 
 object MonteCarloSimulation extends App {
-  val availableActions = Seq("NOP", "BS", "BT", "MM", "SH", "IQ")
-  val archetype = "NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP".split(' ').toVector
+  val availableActions = Seq("NOP", "BS", "BT", "HT", "MM", "SH", "IQ", "MP")
+  val archetype = "NOP NOP NOP NOP NOP BS IQ SH BT HT MP SH HT HT HT BT BS BS".split(' ').toVector
 
   val model = new MonteCarloSimulation(
     charLevel = 12,
