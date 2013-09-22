@@ -4,30 +4,31 @@ import scala.concurrent.duration._
 import net.doxxx.solver.{BreedingStrategies, Solver}
 
 abstract class FFXIVCraftingHQ(charLevel: Int,
-                      recipeLevel: Int,
-                      baseCraftsmanship: Int,
-                      baseControl: Int,
-                      startDurability: Int,
-                      startCP: Int,
-                      startQuality: Int,
-                      difficulty: Int,
-                      archetype: Vector[String]) {
+                               recipeLevel: Int,
+                               baseCraftsmanship: Int,
+                               baseControl: Int,
+                               startDurability: Int,
+                               startCP: Int,
+                               startQuality: Int,
+                               difficulty: Int,
+                               archetype: Vector[String]) {
 
   import FFXIVCraftingHQ._
 
   val actions = IndexedSeq(
     NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand, HastyTouch, InnerQuiet, Rumination
   )
-  val actionMap: Map[String,Action] = actions.map(a => a.name -> a).toMap
+  val actionMap: Map[String, Action] = actions.map(a => a.name -> a).toMap
 
   def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
-  def simulate(steps: Vector[Action]): (Double, Vector[(Action,State)])
+  def simulate(steps: Vector[Action]): (Double, Vector[(Action, State)])
+
   def fitnessFunc(steps: Vector[Action]): Double
 
   val timeLimitTest = Solver.timeLimitTest(5, MINUTES)
-  val stagnationTest = Solver.stagnationTest[Action,Vector[Action]](0.9)
-  val convergenceTest = Solver.convergenceTest[Action,Vector[Action]](1000)
+  val stagnationTest = Solver.stagnationTest[Action, Vector[Action]](0.9)
+  val convergenceTest = Solver.convergenceTest[Action, Vector[Action]](1000)
 
   def stopCondition(specimens: List[(Vector[Action], Double)]): Boolean = {
     timeLimitTest() || stagnationTest(specimens)
@@ -37,6 +38,7 @@ abstract class FFXIVCraftingHQ(charLevel: Int,
 
   val maxNameLength = actions.map(_.name.length).max
   val actionFormatSpec = s"%-${maxNameLength}s"
+
   def prettyAction(a: Action): String = {
     actionFormatSpec.format(a.name)
   }
