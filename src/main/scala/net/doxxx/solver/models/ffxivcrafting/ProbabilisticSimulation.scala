@@ -12,9 +12,10 @@ class ProbabilisticSimulation(charLevel: Int,
                               startCP: Int,
                               startQuality: Int,
                               difficulty: Int,
+                              availableActions: Seq[String],
                               archetype: Vector[String])
   extends FFXIVCraftingHQ(charLevel, recipeLevel, baseCraftsmanship, baseControl, startDurability, startCP,
-    startQuality, difficulty, archetype)
+    startQuality, difficulty, availableActions, archetype)
 {
 
   case class PSState(durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int,
@@ -166,12 +167,8 @@ class ProbabilisticSimulation(charLevel: Int,
 }
 
 object ProbabilisticSimulation extends App {
-  // Blank archetype: NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP
-  // IQ BT BT BT BT BS MM RU BS BS BT BS => 241.5
-  // IQ BS BS BT BT HT MM SH BT HT BS BS
-  // IQ BS BS BT BT HT MM SH BT HT NOP BS
-  // IQ SH BS BS BT BT HT MM SH HT HT HT BS => 353.5
-  // IQ SH BS BS BT HT MM SH HT HT HT BT BS => 354.0
+  val availableActions = Seq("NOP", "BS", "BT", "MM", "SH", "IQ")
+
   val archetype = "NOP NOP NOP NOP NOP NOP HT BT BT SH HT IQ SH HT MM BS BS BS IQ".split(' ').toVector
   val model = new ProbabilisticSimulation(
     charLevel = 12,
@@ -182,10 +179,11 @@ object ProbabilisticSimulation extends App {
     startCP = 190,
     startQuality = 0,
     difficulty = 53,
+    availableActions = availableActions,
     archetype = archetype
   )
 
-  val archetypeGenes = archetype.map(model.actionMap)
+  val archetypeGenes = archetype.map(FFXIVCraftingHQ.actionMap)
 
   val (archetypeFitness, archetypeStates) = model.simulate(archetypeGenes)
   println(s"Archetype fitness = $archetypeFitness")

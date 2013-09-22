@@ -11,14 +11,10 @@ abstract class FFXIVCraftingHQ(charLevel: Int,
                                startCP: Int,
                                startQuality: Int,
                                difficulty: Int,
+                               availableActions: Seq[String],
                                archetype: Vector[String]) {
 
   import FFXIVCraftingHQ._
-
-  val actions = IndexedSeq(
-    NoAction, BasicSynth, BasicTouch, MastersMend, SteadyHand, HastyTouch, InnerQuiet, Rumination
-  )
-  val actionMap: Map[String, Action] = actions.map(a => a.name -> a).toMap
 
   def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
@@ -34,6 +30,7 @@ abstract class FFXIVCraftingHQ(charLevel: Int,
     timeLimitTest() || stagnationTest(specimens)
   }
 
+  val actions = availableActions.map(actionMap).toVector
   val genePool = actions.toArray
 
   val maxNameLength = actions.map(_.name.length).max
@@ -92,6 +89,12 @@ object FFXIVCraftingHQ {
   //  val GreatStrides = Action("GS", 0, 32, 1, 0, 0) // Doubles the efficiency of a 'Touch' action, consuming the Great Strides effect. Lasts 3 steps.
   //  val ElementalBrand = Action("EB", 10, 15, 0.9, 0, 2) // Increases progress. Progress efficiency is doubled when recipe affinity matches element.
   //  val ByregotsBlessing = Action("BB", 10, 24, 0.9, 1, 0) // Increases quality by 100% + 20% for each bonus to control granted by IQ
+
+  val allActions = Seq(
+    NoAction, BasicSynth, BasicTouch, MastersMend, InnerQuiet, SteadyHand, HastyTouch, Rumination, StandardTouch,
+    StandardSynthesis, AdvancedTouch, MastersMend2
+  )
+  val actionMap: Map[String, Action] = allActions.map(a => a.name -> a).toMap
 
   trait State
 }
