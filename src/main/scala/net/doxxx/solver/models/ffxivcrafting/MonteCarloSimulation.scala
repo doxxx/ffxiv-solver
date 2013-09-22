@@ -158,16 +158,17 @@ class MonteCarloSimulation(charLevel: Int,
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
     val durabilityViolations = intermediateStates.count(s => s.durability <= 0 || s.durability > startDurability)
-    val progressViolations = 0 //intermediateStates.count(_.progress < 0)
     val cpViolations = states.count(_.cp < 0)
     val ruminationSeqViolations = math.max(0, steps.segmentLength({ _ == Rumination}, 0) - 1)
     val finalDurabilityPenalty = if (finalState.durability < 0) penalty else 0
     val finalProgressPenalty = if (finalState.progress > 0) penalty else 0
+    val finalActionPenalty = if (steps.last != BasicSynth) penalty else 0
 
     val fitness = (finalState.quality
-      - (durabilityViolations + progressViolations + cpViolations + ruminationSeqViolations) * penalty
+      - (durabilityViolations + cpViolations + ruminationSeqViolations) * penalty
       - finalDurabilityPenalty
-      - finalProgressPenalty)
+      - finalProgressPenalty
+      - finalActionPenalty)
 
     (fitness, steps.zip(states.reverse.tail))
   }
