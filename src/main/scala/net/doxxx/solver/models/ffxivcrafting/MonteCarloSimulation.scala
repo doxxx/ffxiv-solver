@@ -189,7 +189,7 @@ class MonteCarloSimulation(charLevel: Int,
 
 object MonteCarloSimulation extends App {
   val availableActions = Seq("NOP", "BS", "BT", "MM", "SH", "IQ")
-  val archetype = "NOP NOP NOP NOP NOP IQ SH BT HT HT HT SH HT MM BS BS BT BS".split(' ').toVector
+  val archetype = "NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP".split(' ').toVector
 
   val model = new MonteCarloSimulation(
     charLevel = 12,
@@ -222,6 +222,7 @@ object MonteCarloSimulation extends App {
   println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
   println()
 
-  //    println(states.map { case (a, s) => s"${prettyAction(a)} => ${prettyState(s)}"}.mkString("\n"))
+  val (_, actionStates) = model.simulate(best)
+  println(actionStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
 
 }

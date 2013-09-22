@@ -169,7 +169,7 @@ class ProbabilisticSimulation(charLevel: Int,
 object ProbabilisticSimulation extends App {
   val availableActions = Seq("NOP", "BS", "BT", "MM", "SH", "IQ")
 
-  val archetype = "NOP NOP NOP NOP NOP NOP HT BT BT SH HT IQ SH HT MM BS BS BS IQ".split(' ').toVector
+  val archetype = "NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP NOP".split(' ').toVector
   val model = new ProbabilisticSimulation(
     charLevel = 12,
     recipeLevel = 12,
@@ -202,4 +202,7 @@ object ProbabilisticSimulation extends App {
   println(s"Total time: ${elapsed/1000}s")
   println(s"Avg time per generation: ${elapsed/(epoch+1)}ms")
   println()
+
+  val (_, actionStates) = model.simulate(best)
+  println(actionStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
 }
