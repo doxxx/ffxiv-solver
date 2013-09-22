@@ -209,6 +209,9 @@ object MonteCarloSimulation extends App {
   val archetypeFitness = model.fitnessFunc(archetypeGenes)
   println(s"Archetype fitness = $archetypeFitness")
 
+  val (_, archetypeStates) = model.simulate(archetypeGenes)
+  println(archetypeStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
+
   println()
 
   val (evolvedSpecimens, epoch, elapsed) = model.run()
