@@ -4,15 +4,15 @@ import scala.concurrent.duration._
 import net.doxxx.solver.{BreedingStrategies, Solver}
 
 abstract class SimulationBase(charLevel: Int,
-                               recipeLevel: Int,
-                               baseCraftsmanship: Int,
-                               baseControl: Int,
-                               startDurability: Int,
-                               startCP: Int,
-                               startQuality: Int,
-                               difficulty: Int,
-                               availableActions: Seq[String],
-                               archetype: Vector[String]) {
+                              recipeLevel: Int,
+                              baseCraftsmanship: Int,
+                              baseControl: Int,
+                              startDurability: Int,
+                              startCP: Int,
+                              startQuality: Int,
+                              difficulty: Int,
+                              availableActions: Seq[String],
+                              archetype: Vector[String]) {
 
   import SimulationBase._
 
@@ -63,12 +63,12 @@ abstract class SimulationBase(charLevel: Int,
 
 object SimulationBase {
 
-  case class Action (name: String,
-                     durabilityCost: Int,
-                     cpCost: Int,
-                     successRate: Double,
-                     qualityEfficiency: Double,
-                     progressEfficiency: Double)
+  case class Action(name: String,
+                    durabilityCost: Int,
+                    cpCost: Int,
+                    successRate: Double,
+                    qualityEfficiency: Double,
+                    progressEfficiency: Double)
 
   val NoAction = Action("NOP", 0, 0, 0, 0, 0)
   val BasicSynth = Action("BS", 10, 0, 0.9, 0, 1)
@@ -97,4 +97,5 @@ object SimulationBase {
   val actionMap: Map[String, Action] = allActions.map(a => a.name -> a).toMap
 
   trait State
+
 }

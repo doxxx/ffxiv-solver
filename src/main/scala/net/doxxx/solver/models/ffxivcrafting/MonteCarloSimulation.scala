@@ -18,12 +18,13 @@ class MonteCarloSimulation(charLevel: Int,
     startQuality, difficulty, availableActions, archetype)
 {
 
-  case class MCSState(prevSucceeded: Boolean, durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int,
-                      craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double,
-                      manipulation: Int) extends State
+  case class MCSState(prevSucceeded: Boolean, durability: Int, cp: Int, quality: Double, progress: Double,
+                      steadyHand: Int, craftsmanship: Double, control: Double, innerQuiet: Boolean,
+                      innerQuietCount: Double, manipulation: Int) extends State
   {
 
-    override def toString = "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
+    override def toString =
+      "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
 
     def apply(action: Action) = {
       if (durability <= 0 || progress <= 0) {

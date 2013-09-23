@@ -21,7 +21,8 @@ class ProbabilisticSimulation(charLevel: Int,
                      craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double,
                      manipulation: Int) extends State
   {
-    override def toString = "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
+    override def toString =
+      "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
 
     def apply(action: Action) = {
       copy(
