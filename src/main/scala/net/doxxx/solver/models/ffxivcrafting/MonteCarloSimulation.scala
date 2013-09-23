@@ -24,7 +24,7 @@ class MonteCarloSimulation(charLevel: Int,
   {
 
     override def toString =
-      "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
+      f"dur=$durability%-3d cp=$cp%-3d qual=$quality%-4.0f prog=$progress%-3.0f"
 
     def apply(action: Action) = {
       if (durability <= 0 || progress <= 0) {

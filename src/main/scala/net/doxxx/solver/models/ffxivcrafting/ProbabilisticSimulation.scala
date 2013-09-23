@@ -22,7 +22,7 @@ class ProbabilisticSimulation(charLevel: Int,
                      manipulation: Int) extends State
   {
     override def toString =
-      "durability=%-3d cp=%-3d quality=%-4.0f progress=%-3.0f".format(durability, cp, quality, progress)
+      f"dur=$durability%-3d cp=$cp%-3d qual=$quality%-4.0f prog=$progress%-3.0f"
 
     def apply(action: Action) = {
       copy(
@@ -196,7 +196,7 @@ object ProbabilisticSimulation extends App {
   val (archetypeFitness, archetypeStates) = model.simulate(archetypeGenes)
   println(s"Archetype fitness = $archetypeFitness")
 
-  println(archetypeStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
+  println(archetypeStates.map { case (a, s) => f"${a.name}%-3s => $s%s"}.mkString("\n"))
 
   println()
 
@@ -212,5 +212,5 @@ object ProbabilisticSimulation extends App {
   println()
 
   val (_, actionStates) = model.simulate(best.filter(_ != NoAction))
-  println(actionStates.map { case (a, s) => s"${a.name} => $s"}.mkString("\n"))
+  println(actionStates.map { case (a, s) => f"${a.name}%-3s => $s%s"}.mkString("\n"))
 }
