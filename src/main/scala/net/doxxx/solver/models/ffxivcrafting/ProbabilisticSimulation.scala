@@ -19,10 +19,12 @@ class ProbabilisticSimulation(charLevel: Int,
 
   case class PSState(durability: Int, cp: Int, quality: Double, progress: Double, steadyHand: Int,
                      craftsmanship: Double, control: Double, innerQuiet: Boolean, innerQuietCount: Double,
-                     manipulation: Int) extends State
+                     manipulation: Int, excellentCondition: Double, goodCondition: Double, poorCondition: Double)
+    extends State
   {
     override def toString =
-      f"dur=$durability%-3d cp=$cp%-3d qual=$quality%-4.0f prog=$progress%-3.0f"
+      f"dur=$durability%-3d cp=$cp%-3d qual=$quality%-4.0f prog=$progress%-3.0f " +
+        f"exCon=$excellentCondition%-3.2f goCon=$goodCondition%-3.2f poCon=$poorCondition%-3.2f"
 
     def apply(action: Action) = {
       copy(
@@ -35,10 +37,12 @@ class ProbabilisticSimulation(charLevel: Int,
         calcControl(action),
         calcInnerQuiet(action),
         calcInnerQuietCount(action),
-        calcManipulation(action)
+        calcManipulation(action),
+        calcExcellentCondition(action),
+        calcGoodCondition(action),
+        calcPoorCondition(action)
       )
     }
-
 
     def successRate(action: Action): Double = {
       math.min(1, action.successRate + (if (steadyHand > 0) 0.2 else 0))
@@ -126,6 +130,18 @@ class ProbabilisticSimulation(charLevel: Int,
       if (action == Manipulation) 3 else math.max(0, manipulation - 1)
     }
 
+    def calcExcellentCondition(action: Action): Double = {
+      (1 - (excellentCondition + goodCondition + poorCondition)) * 0.01
+    }
+
+    def calcGoodCondition(action: Action): Double = {
+      (1 - (excellentCondition + goodCondition + poorCondition)) * 0.24
+    }
+
+    def calcPoorCondition(action: Action): Double = {
+      // poor condition always and only occurs after excellent condition
+      excellentCondition
+    }
   }
 
   val penalty = 10000
@@ -147,7 +163,10 @@ class ProbabilisticSimulation(charLevel: Int,
       control = baseControl,
       innerQuiet = false,
       innerQuietCount = 0,
-      manipulation = 0
+      manipulation = 0,
+      excellentCondition = 0,
+      goodCondition = 0,
+      poorCondition = 0
     )
     val states = eval(steps.toList, List(initState))
     val finalState :: intermediateStates = states
