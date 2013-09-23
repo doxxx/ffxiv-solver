@@ -63,13 +63,6 @@ abstract class SimulationBase(charLevel: Int,
 
 object SimulationBase {
 
-  case class Action(name: String,
-                    durabilityCost: Int,
-                    cpCost: Int,
-                    successRate: Double,
-                    qualityEfficiency: Double,
-                    progressEfficiency: Double)
-
   val NoAction = Action("NOP", 0, 0, 0, 0, 0)
   val BasicSynth = Action("BS", 10, 0, 0.9, 0, 1)
   val BasicTouch = Action("BT", 10, 18, 0.7, 1, 0)
@@ -96,6 +89,14 @@ object SimulationBase {
   )
   val actionMap: Map[String, Action] = allActions.map(a => a.name -> a).toMap
 
-  trait State
-
 }
+
+case class Action(name: String,
+                  durabilityCost: Int,
+                  cpCost: Int,
+                  successRate: Double,
+                  qualityEfficiency: Double,
+                  progressEfficiency: Double)
+
+trait State
+
