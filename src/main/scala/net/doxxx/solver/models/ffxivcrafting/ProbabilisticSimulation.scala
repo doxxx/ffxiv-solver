@@ -1,7 +1,6 @@
 package net.doxxx.solver.models.ffxivcrafting
 
-import net.doxxx.solver.models.FFXIVCraftingHQ
-import net.doxxx.solver.models.FFXIVCraftingHQ._
+import SimulationBase._
 import scala.annotation.tailrec
 
 class ProbabilisticSimulation(charLevel: Int,
@@ -14,7 +13,7 @@ class ProbabilisticSimulation(charLevel: Int,
                               difficulty: Int,
                               availableActions: Seq[String],
                               archetype: Vector[String])
-  extends FFXIVCraftingHQ(charLevel, recipeLevel, baseCraftsmanship, baseControl, startDurability, startCP,
+  extends SimulationBase(charLevel, recipeLevel, baseCraftsmanship, baseControl, startDurability, startCP,
     startQuality, difficulty, availableActions, archetype)
 {
 
@@ -191,7 +190,7 @@ object ProbabilisticSimulation extends App {
     archetype = archetype
   )
 
-  val archetypeGenes = archetype.map(FFXIVCraftingHQ.actionMap)
+  val archetypeGenes = archetype.map(SimulationBase.actionMap)
 
   val (archetypeFitness, archetypeStates) = model.simulate(archetypeGenes)
   println(s"Archetype fitness = $archetypeFitness")

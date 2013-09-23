@@ -1,9 +1,8 @@
 package net.doxxx.solver.models.ffxivcrafting
 
+import SimulationBase._
 import scala.util.Random
 import scala.annotation.tailrec
-import net.doxxx.solver.models.FFXIVCraftingHQ
-import net.doxxx.solver.models.FFXIVCraftingHQ._
 
 class MonteCarloSimulation(charLevel: Int,
                            recipeLevel: Int,
@@ -15,7 +14,7 @@ class MonteCarloSimulation(charLevel: Int,
                            difficulty: Int,
                            availableActions: Seq[String],
                            archetype: Vector[String])
-  extends FFXIVCraftingHQ(charLevel, recipeLevel, baseCraftsmanship, baseControl, startDurability, startCP,
+  extends SimulationBase(charLevel, recipeLevel, baseCraftsmanship, baseControl, startDurability, startCP,
     startQuality, difficulty, availableActions, archetype)
 {
 
@@ -212,7 +211,7 @@ object MonteCarloSimulation extends App {
     archetype = archetype
   )
 
-  val archetypeGenes = archetype.map(FFXIVCraftingHQ.actionMap)
+  val archetypeGenes = archetype.map(SimulationBase.actionMap)
 
   val archetypeFitness = model.fitnessFunc(archetypeGenes)
   println(s"Archetype fitness = $archetypeFitness")

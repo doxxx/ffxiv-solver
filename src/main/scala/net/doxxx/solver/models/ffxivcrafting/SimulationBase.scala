@@ -1,9 +1,9 @@
-package net.doxxx.solver.models
+package net.doxxx.solver.models.ffxivcrafting
 
 import scala.concurrent.duration._
 import net.doxxx.solver.{BreedingStrategies, Solver}
 
-abstract class FFXIVCraftingHQ(charLevel: Int,
+abstract class SimulationBase(charLevel: Int,
                                recipeLevel: Int,
                                baseCraftsmanship: Int,
                                baseControl: Int,
@@ -14,7 +14,7 @@ abstract class FFXIVCraftingHQ(charLevel: Int,
                                availableActions: Seq[String],
                                archetype: Vector[String]) {
 
-  import FFXIVCraftingHQ._
+  import SimulationBase._
 
   def specimenBuilder(actions: Iterable[Action]): Vector[Action] = actions.toVector
 
@@ -61,7 +61,7 @@ abstract class FFXIVCraftingHQ(charLevel: Int,
   }
 }
 
-object FFXIVCraftingHQ {
+object SimulationBase {
 
   case class Action (name: String,
                      durabilityCost: Int,
