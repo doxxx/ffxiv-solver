@@ -79,6 +79,11 @@ class ProbabilisticSimulation(charLevel: Int,
       else 0
     }
 
+    def normalCondition: Double = 1 - (excellentCondition + goodCondition + poorCondition)
+
+    def conditionQualityFactor: Double =
+      excellentCondition * 4 + goodCondition * 1.5 + poorCondition * 0.5 + normalCondition
+
     def calcDurability(action: Action): Int = {
       val bonus = if (manipulation > 0) 10 else 0
       math.min(startDurability, durability - action.durabilityCost + bonus)
@@ -89,7 +94,7 @@ class ProbabilisticSimulation(charLevel: Int,
     }
 
     def calcQuality(action: Action): Double = {
-      quality + effectiveQualityIncrease * action.qualityEfficiency * successRate(action)
+      quality + effectiveQualityIncrease * action.qualityEfficiency * conditionQualityFactor * successRate(action)
     }
 
     def calcProgress(action: Action): Double = {
@@ -131,11 +136,11 @@ class ProbabilisticSimulation(charLevel: Int,
     }
 
     def calcExcellentCondition(action: Action): Double = {
-      (1 - (excellentCondition + goodCondition + poorCondition)) * 0.01
+      normalCondition * 0.01
     }
 
     def calcGoodCondition(action: Action): Double = {
-      (1 - (excellentCondition + goodCondition + poorCondition)) * 0.24
+      normalCondition * 0.24
     }
 
     def calcPoorCondition(action: Action): Double = {
