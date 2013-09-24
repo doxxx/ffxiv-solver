@@ -23,8 +23,7 @@ class ProbabilisticSimulation(charLevel: Int,
     extends State
   {
     override def toString =
-      f"dur=$durability%-3d cp=$cp%-3d qual=$quality%-4.0f prog=$progress%-3.0f " +
-        f"exCon=$excellentCondition%-3.2f goCon=$goodCondition%-3.2f poCon=$poorCondition%-3.2f"
+      f"dur=$durability%-3d cp=$cp%-3d qual=$quality%-4.0f prog=$progress%-3.0f"
 
     def apply(action: Action) = {
       copy(
